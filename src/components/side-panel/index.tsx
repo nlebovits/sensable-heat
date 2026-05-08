@@ -136,7 +136,16 @@ export function SidePanel() {
         {/* Header */}
         <div className="panel-block" style={{ borderBottom: "none", paddingBottom: 8 }}>
           <div className="mono-label" style={{ marginBottom: 12 }}>
-            A Radiant Earth project
+            A{" "}
+            <a
+              href="https://radiant.earth/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              Radiant Earth
+            </a>
+            {" "}project
           </div>
           <Wordmark size={20} />
           <p
@@ -147,8 +156,7 @@ export function SidePanel() {
               marginTop: 14,
             }}
           >
-            Where heat reaches the ground. A global, high-resolution measurement
-            of land surface temperature, made plain enough to plan against.
+            A global, high-resolution map of land surface temperature, derived from Landsat 8/9.
           </p>
         </div>
 
@@ -180,7 +188,7 @@ export function SidePanel() {
                 autoComplete="off"
               />
               {isLoading ? (
-                <div className="h-4 w-4 border-2 border-[var(--h6-hex)] border-t-transparent rounded-full animate-spin" />
+                <div className="h-4 w-4 border-2 border-[var(--h6-hex)] border-t-transparent animate-spin" />
               ) : (
                 <span className="kbd">⌘K</span>
               )}
@@ -191,7 +199,7 @@ export function SidePanel() {
                 ref={listRef}
                 id="search-suggestions"
                 role="listbox"
-                className="absolute z-50 w-full mt-1 bg-[var(--surface)] border border-[var(--line)] rounded max-h-60 overflow-auto"
+                className="absolute z-50 w-full mt-1 bg-[var(--surface)] border border-[var(--line)] max-h-60 overflow-auto"
               >
                 {suggestions.map((suggestion, index) => (
                   <li
@@ -385,7 +393,14 @@ export function SidePanel() {
           </div>
           <div className="row">
             <span>Hosted</span>
-            <span>Source Coop</span>
+            <a
+              href="https://source.coop/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              Source Coop
+            </a>
           </div>
           <div className="row">
             <span>Build</span>

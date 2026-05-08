@@ -400,7 +400,7 @@ export function MapContainer() {
         >
           <div className="flex flex-col items-center gap-3">
             <div
-              className="h-8 w-8 border-2 border-[var(--h6-hex)] border-t-transparent rounded-full animate-spin"
+              className="h-8 w-8 border-2 border-[var(--h6-hex)] border-t-transparent animate-spin"
             />
             <span className="mono-label" style={{ fontSize: 10 }}>
               LOADING MAP
@@ -424,14 +424,6 @@ export function MapContainer() {
 
       <div className="map-chrome br" style={{ zIndex: 10 }}>
         <Attribution />
-      </div>
-
-      {/* View mode indicator */}
-      <div
-        className="absolute top-4 left-1/2 -translate-x-1/2 mono-label glass px-3 py-1.5"
-        style={{ fontSize: 10, zIndex: 10 }}
-      >
-        {isGlobe ? "GLOBE VIEW" : "MAP VIEW"} · Z{zoom.toFixed(1)}
       </div>
     </div>
   );
