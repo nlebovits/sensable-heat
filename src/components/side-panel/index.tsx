@@ -5,6 +5,7 @@ import { Wordmark } from "@/components/wordmark";
 import { Search, ChevronDown, ArrowRight, Info } from "@/components/icons";
 import { useMapStore, type Period, type Compositing } from "@/store/map-store";
 import { useGeocode, type GeocodeSuggestion } from "@/hooks/useGeocode";
+import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 
 const PERIODS: Period[] = ["single year", "multi-year", "rolling avg"];
 const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
@@ -35,10 +36,13 @@ export function SidePanel() {
   const [aboutOpen, setAboutOpen] = useState(true);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
   const { suggestions, isLoading, clear } = useGeocode(searchValue);
+
+  useGlobalShortcuts({ searchInputRef: inputRef });
 
   const handleSelect = useCallback(
     (suggestion: GeocodeSuggestion) => {
@@ -104,8 +108,30 @@ export function SidePanel() {
     return year > min && year < max && !years.includes(year);
   };
 
+  const toggleMobilePanel = useCallback(() => {
+    setIsMobileExpanded((prev) => !prev);
+  }, []);
+
+  const panelClassName = ["panel", "left", isMobileExpanded && "expanded"]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <aside className="panel left">
+    <aside className={panelClassName}>
+      <div
+        className="panel-drag-handle"
+        onClick={toggleMobilePanel}
+        role="button"
+        aria-label="Toggle panel"
+        aria-expanded={isMobileExpanded}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleMobilePanel();
+          }
+        }}
+      ></div>
       <div className="panel-inner">
         {/* Header */}
         <div className="panel-block" style={{ borderBottom: "none", paddingBottom: 8 }}>
@@ -254,32 +280,44 @@ export function SidePanel() {
         </div>
 
         {/* Layers */}
-        <div className="panel-block">
-          <div className="label">Layers</div>
+        <div className="panel-block" role="group" aria-labelledby="layers-label">
+          <div className="label" id="layers-label">Layers</div>
           <div className="toggle-row">
-            <span>
+            <span id="lst-label">
               <span className="name">Land surface temperature</span>
               <span className="sub">Landsat 8/9 · 30m</span>
             </span>
-            <span className="switch on" />
+            <button
+              className="switch on"
+              role="switch"
+              aria-checked="true"
+              aria-labelledby="lst-label"
+              disabled
+            />
           </div>
           <div className="toggle-row">
-            <span>
+            <span id="adm-label">
               <span className="name">Admin boundaries</span>
-              <span className="sub">GADM · adm0 → adm3</span>
+              <span className="sub">Overture Maps divisions</span>
             </span>
-            <span
+            <button
               className={`switch ${showAdm ? "on" : ""}`}
+              role="switch"
+              aria-checked={showAdm}
+              aria-labelledby="adm-label"
               onClick={() => setShowAdm(!showAdm)}
             />
           </div>
           <div className="toggle-row">
-            <span>
+            <span id="sat-label">
               <span className="name">Satellite imagery</span>
-              <span className="sub">Sentinel-2 · cloud-free</span>
+              <span className="sub">Esri · cloud-free</span>
             </span>
-            <span
+            <button
               className={`switch ${showSatellite ? "on" : ""}`}
+              role="switch"
+              aria-checked={showSatellite}
+              aria-labelledby="sat-label"
               onClick={() => setShowSatellite(!showSatellite)}
             />
           </div>

@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Topbar } from "@/components/topbar";
 import { SidePanel } from "@/components/side-panel";
 import { MapContainer } from "@/components/map";
 import { useMapStore } from "@/store/map-store";
+import { useUrlSync } from "@/hooks/useUrlSync";
 
-export default function Home() {
+function UrlSyncProvider({ children }: { children: React.ReactNode }) {
+  useUrlSync();
+  return <>{children}</>;
+}
+
+function AppContent() {
   const { theme } = useMapStore();
 
   useEffect(() => {
@@ -22,5 +28,15 @@ export default function Home() {
         <MapContainer />
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <UrlSyncProvider>
+        <AppContent />
+      </UrlSyncProvider>
+    </Suspense>
   );
 }

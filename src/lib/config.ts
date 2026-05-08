@@ -38,6 +38,13 @@ export const SOURCES = {
   // Glyphs for map labels
   glyphs:
     "https://carbonplan-maps.s3.us-west-2.amazonaws.com/basemaps/fonts/{fontstack}/{range}.pbf",
+
+  // Overture Maps divisions (admin boundaries)
+  divisions: {
+    type: "vector" as const,
+    url: "pmtiles://https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2026-01-21/divisions.pmtiles",
+    attribution: '<a href="https://overturemaps.org">Overture Maps</a>',
+  },
 };
 
 // 9-step heat ramp (hex values for GPU/canvas use)

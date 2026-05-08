@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type Period = "single year" | "multi-year" | "rolling avg";
 export type Compositing = "p99" | "p95" | "mean" | "max";
@@ -11,6 +12,7 @@ interface MapState {
   zoom: number;
   bearing: number;
   pitch: number;
+  isFlying: boolean;
 
   // Time
   period: Period;
@@ -43,81 +45,94 @@ interface MapState {
   toggleTheme: () => void;
   setPanelOpen: (open: boolean) => void;
   flyTo: (lng: number, lat: number, zoom?: number) => void;
+  setIsFlying: (isFlying: boolean) => void;
 }
 
-export const useMapStore = create<MapState>((set, get) => ({
-  // Initial camera: world view
-  latitude: 20,
-  longitude: 0,
-  zoom: 1.5,
-  bearing: 0,
-  pitch: 0,
+export const useMapStore = create<MapState>()(
+  persist(
+    (set, get) => ({
+      // Initial camera: world view
+      latitude: 20,
+      longitude: 0,
+      zoom: 1.5,
+      bearing: 0,
+      pitch: 0,
+      isFlying: false,
 
-  // Time defaults
-  period: "single year",
-  years: [2024],
-  compositing: "p95",
+      // Time defaults
+      period: "single year",
+      years: [2024],
+      compositing: "p95",
 
-  // Layers
-  showAdm: true,
-  showSatellite: false,
+      // Layers
+      showAdm: true,
+      showSatellite: false,
 
-  // Admin filter
-  admPath: [],
-  admId: null,
+      // Admin filter
+      admPath: [],
+      admId: null,
 
-  // UI
-  theme: "dark",
-  panelOpen: true,
+      // UI
+      theme: "dark",
+      panelOpen: true,
 
-  // Actions
-  setViewState: (viewState) => set((state) => ({ ...state, ...viewState })),
+      // Actions
+      setViewState: (viewState) => set((state) => ({ ...state, ...viewState })),
 
-  setPeriod: (period) => {
-    const state = get();
-    if (period === "single year" && state.years.length > 1) {
-      set({ period, years: [state.years[state.years.length - 1]] });
-    } else {
-      set({ period });
-    }
-  },
+      setPeriod: (period) => {
+        const state = get();
+        if (period === "single year" && state.years.length > 1) {
+          set({ period, years: [state.years[state.years.length - 1]] });
+        } else {
+          set({ period });
+        }
+      },
 
-  toggleYear: (year) => {
-    const state = get();
-    if (state.period === "single year") {
-      set({ years: [year] });
-    } else {
-      if (state.years.includes(year)) {
-        const newYears = state.years.filter((y) => y !== year);
-        set({ years: newYears.length > 0 ? newYears : [year] });
-      } else {
-        set({ years: [...state.years, year].sort() });
-      }
-    }
-  },
+      toggleYear: (year) => {
+        const state = get();
+        if (state.period === "single year") {
+          set({ years: [year] });
+        } else {
+          if (state.years.includes(year)) {
+            const newYears = state.years.filter((y) => y !== year);
+            set({ years: newYears.length > 0 ? newYears : [year] });
+          } else {
+            set({ years: [...state.years, year].sort() });
+          }
+        }
+      },
 
-  setYears: (years) => set({ years }),
+      setYears: (years) => set({ years }),
 
-  setCompositing: (compositing) => set({ compositing }),
+      setCompositing: (compositing) => set({ compositing }),
 
-  setShowAdm: (showAdm) => set({ showAdm }),
+      setShowAdm: (showAdm) => set({ showAdm }),
 
-  setShowSatellite: (showSatellite) => set({ showSatellite }),
+      setShowSatellite: (showSatellite) => set({ showSatellite }),
 
-  setAdmFilter: (admPath, admId) => set({ admPath, admId }),
+      setAdmFilter: (admPath, admId) => set({ admPath, admId }),
 
-  clearAdmFilter: () => set({ admPath: [], admId: null }),
+      clearAdmFilter: () => set({ admPath: [], admId: null }),
 
-  setTheme: (theme) => set({ theme }),
+      setTheme: (theme) => set({ theme }),
 
-  toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
+      toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
 
-  setPanelOpen: (panelOpen) => set({ panelOpen }),
+      setPanelOpen: (panelOpen) => set({ panelOpen }),
 
-  flyTo: (lng, lat, zoom = 12) =>
-    set({
-      longitude: lng,
-      latitude: lat,
-      zoom,
+      flyTo: (lng, lat, zoom = 12) =>
+        set({
+          longitude: lng,
+          latitude: lat,
+          zoom,
+          isFlying: true,
+        }),
+
+      setIsFlying: (isFlying) => set({ isFlying }),
     }),
-}));
+    {
+      name: "sensable-heat-settings",
+      partialize: (state) => ({ theme: state.theme }),
+    }
+  )
+);

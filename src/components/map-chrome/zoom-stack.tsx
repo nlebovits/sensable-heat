@@ -11,15 +11,27 @@ interface ZoomStackProps {
 
 export function ZoomStack({ onZoomIn, onZoomOut, onLocate }: ZoomStackProps) {
   return (
-    <div className="zoom-stack">
-      <button onClick={onZoomIn} title="Zoom in">
-        <Plus size={16} />
+    <div className="zoom-stack" role="group" aria-label="Map controls">
+      <button
+        onClick={onZoomIn}
+        title="Zoom in"
+        aria-label="Zoom in"
+      >
+        <Plus size={16} aria-hidden="true" />
       </button>
-      <button onClick={onZoomOut} title="Zoom out">
-        <Minus size={16} />
+      <button
+        onClick={onZoomOut}
+        title="Zoom out"
+        aria-label="Zoom out"
+      >
+        <Minus size={16} aria-hidden="true" />
       </button>
-      <button onClick={onLocate} title="Go to my location">
-        <Locate size={16} />
+      <button
+        onClick={onLocate}
+        title="Go to my location"
+        aria-label="Go to my location"
+      >
+        <Locate size={16} aria-hidden="true" />
       </button>
     </div>
   );

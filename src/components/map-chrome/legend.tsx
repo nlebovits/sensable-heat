@@ -10,12 +10,16 @@ export function Legend() {
     : "VIEWPORT";
 
   return (
-    <div className="floating-legend">
+    <div
+      className="floating-legend"
+      role="figure"
+      aria-label={`Land surface temperature legend showing ${compositing} values for ${years.join(", ")}, ranging from 22 to 54 degrees Celsius`}
+    >
       <div className="head">
         <span>LAND SURFACE TEMPERATURE · °C</span>
         <span className="auto">AUTO · {scopeLabel}</span>
       </div>
-      <div className="legend-bar">
+      <div className="legend-bar" aria-hidden="true">
         <span />
         <span />
         <span />
@@ -26,7 +30,7 @@ export function Legend() {
         <span />
         <span />
       </div>
-      <div className="legend-axis">
+      <div className="legend-axis" aria-hidden="true">
         <span>22°</span>
         <span>30°</span>
         <span>38°</span>

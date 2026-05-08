@@ -10,6 +10,7 @@ import { MapView, _GlobeView as GlobeView } from "@deck.gl/core";
 import { GeoJsonLayer } from "@deck.gl/layers";
 import type { MapViewState, Layer } from "@deck.gl/core";
 
+import { FlyToInterpolator } from "@deck.gl/core";
 import { useMapStore } from "@/store/map-store";
 import { MAP_CONFIG, SOURCES, LAND_GEOJSON_URL, GRATICULE_GEOJSON_URL } from "@/lib/config";
 import { Legend } from "@/components/map-chrome/legend";
@@ -28,12 +29,15 @@ export function MapContainer() {
     theme,
     showAdm,
     showSatellite,
+    isFlying,
     setViewState,
+    setIsFlying,
   } = useMapStore();
 
   const [isGlobe, setIsGlobe] = useState(zoom < GLOBE_ZOOM_THRESHOLD);
   const [landData, setLandData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [graticuleData, setGraticuleData] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // Register PMTiles protocol on mount
   useEffect(() => {
@@ -58,16 +62,17 @@ export function MapContainer() {
       .catch(console.error);
   }, []);
 
-  const viewState = useMemo(
-    () => ({
-      latitude,
-      longitude,
-      zoom,
-      bearing,
-      pitch,
-    }),
-    [latitude, longitude, zoom, bearing, pitch]
-  );
+  const viewState = useMemo(() => {
+    const base = { latitude, longitude, zoom, bearing, pitch };
+    if (isFlying) {
+      return {
+        ...base,
+        transitionDuration: MAP_CONFIG.TRANSITION_DURATION,
+        transitionInterpolator: new FlyToInterpolator(),
+      };
+    }
+    return base;
+  }, [latitude, longitude, zoom, bearing, pitch, isFlying]);
 
   // Track globe/map mode based on zoom
   useEffect(() => {
@@ -78,7 +83,13 @@ export function MapContainer() {
   }, [zoom, isGlobe]);
 
   const onViewStateChange = useCallback(
-    ({ viewState: newViewState }: { viewState: MapViewState }) => {
+    ({
+      viewState: newViewState,
+      interactionState,
+    }: {
+      viewState: MapViewState;
+      interactionState?: { inTransition?: boolean };
+    }) => {
       setViewState({
         latitude: newViewState.latitude,
         longitude: newViewState.longitude,
@@ -86,8 +97,12 @@ export function MapContainer() {
         bearing: newViewState.bearing || 0,
         pitch: newViewState.pitch || 0,
       });
+
+      if (isFlying && interactionState && !interactionState.inTransition) {
+        setIsFlying(false);
+      }
     },
-    [setViewState]
+    [setViewState, isFlying, setIsFlying]
   );
 
   const handleZoomIn = useCallback(() => {
@@ -114,6 +129,10 @@ export function MapContainer() {
       );
     }
   }, [setViewState]);
+
+  const handleMapLoad = useCallback(() => {
+    setIsMapLoaded(true);
+  }, []);
 
   const views = useMemo(() => {
     if (isGlobe) {
@@ -186,6 +205,7 @@ export function MapContainer() {
       sources: {
         basemap: SOURCES.basemap,
         ...(showSatellite ? { satellite: SOURCES.satellite } : {}),
+        ...(showAdm ? { divisions: SOURCES.divisions } : {}),
       },
       layers: [
         // Satellite base (if enabled)
@@ -229,7 +249,7 @@ export function MapContainer() {
           },
         },
 
-        // Boundaries
+        // Boundaries (from basemap)
         {
           id: "boundaries",
           type: "line" as const,
@@ -243,6 +263,33 @@ export function MapContainer() {
             "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.5, 10, 1.5],
           },
         },
+
+        // Admin boundaries (Overture divisions)
+        ...(showAdm
+          ? [
+              {
+                id: "admin-boundaries",
+                type: "line" as const,
+                source: "divisions",
+                "source-layer": "division_boundary",
+                paint: {
+                  "line-color":
+                    theme === "dark"
+                      ? "rgba(199, 84, 38, 0.6)"
+                      : "rgba(199, 84, 38, 0.5)",
+                  "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    2, 0.3,
+                    6, 0.8,
+                    10, 1.5,
+                    14, 2.5,
+                  ],
+                },
+              },
+            ]
+          : []),
 
         // Roads (higher zoom)
         {
@@ -307,10 +354,14 @@ export function MapContainer() {
         },
       ],
     } as StyleSpecification;
-  }, [isGlobe, theme, showSatellite]);
+  }, [isGlobe, theme, showSatellite, showAdm]);
 
   return (
-    <div className="relative flex-1 h-full">
+    <div
+      className="relative flex-1 h-full"
+      role="application"
+      aria-label="Interactive land surface temperature map"
+    >
       {/* Globe background gradient */}
       {isGlobe && (
         <div
@@ -328,6 +379,7 @@ export function MapContainer() {
         views={views}
         viewState={viewState}
         onViewStateChange={onViewStateChange}
+        onLoad={handleMapLoad}
         layers={layers}
         controller={true}
         style={{ position: "absolute", inset: "0" }}
@@ -339,6 +391,23 @@ export function MapContainer() {
           />
         )}
       </DeckGL>
+
+      {/* Loading indicator */}
+      {!isMapLoaded && (
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ zIndex: 5 }}
+        >
+          <div className="flex flex-col items-center gap-3">
+            <div
+              className="h-8 w-8 border-2 border-[var(--h6-hex)] border-t-transparent rounded-full animate-spin"
+            />
+            <span className="mono-label" style={{ fontSize: 10 }}>
+              LOADING MAP
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Map chrome */}
       <div className="map-chrome bl" style={{ zIndex: 10 }}>
