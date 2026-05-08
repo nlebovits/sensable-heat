@@ -42,6 +42,7 @@ interface MapState {
   setTheme: (theme: "dark" | "light") => void;
   toggleTheme: () => void;
   setPanelOpen: (open: boolean) => void;
+  flyTo: (lng: number, lat: number, zoom?: number) => void;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
@@ -112,4 +113,11 @@ export const useMapStore = create<MapState>((set, get) => ({
   toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
 
   setPanelOpen: (panelOpen) => set({ panelOpen }),
+
+  flyTo: (lng, lat, zoom = 12) =>
+    set({
+      longitude: lng,
+      latitude: lat,
+      zoom,
+    }),
 }));

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Wordmark } from "@/components/wordmark";
 import { Search, ChevronDown, ArrowRight, Info } from "@/components/icons";
 import { useMapStore, type Period, type Compositing } from "@/store/map-store";
-import { useState } from "react";
+import { useGeocode, type GeocodeSuggestion } from "@/hooks/useGeocode";
 
 const PERIODS: Period[] = ["single year", "multi-year", "rolling avg"];
 const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
@@ -27,10 +28,74 @@ export function SidePanel() {
     setCompositing,
     setShowAdm,
     setShowSatellite,
+    flyTo,
   } = useMapStore();
 
   const [searchValue, setSearchValue] = useState("");
   const [aboutOpen, setAboutOpen] = useState(true);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  const { suggestions, isLoading, clear } = useGeocode(searchValue);
+
+  const handleSelect = useCallback(
+    (suggestion: GeocodeSuggestion) => {
+      flyTo(suggestion.lng, suggestion.lat);
+      setSearchValue(suggestion.name);
+      setIsDropdownOpen(false);
+      clear();
+      inputRef.current?.blur();
+    },
+    [flyTo, clear]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (suggestions.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev < suggestions.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev > 0 ? prev - 1 : suggestions.length - 1
+          );
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+            handleSelect(suggestions[highlightedIndex]);
+          }
+          break;
+        case "Escape":
+          setIsDropdownOpen(false);
+          setHighlightedIndex(-1);
+          inputRef.current?.blur();
+          break;
+      }
+    },
+    [suggestions, highlightedIndex, handleSelect]
+  );
+
+  useEffect(() => {
+    if (highlightedIndex >= 0 && listRef.current) {
+      const item = listRef.current.children[highlightedIndex] as HTMLElement;
+      item?.scrollIntoView({ block: "nearest" });
+    }
+  }, [highlightedIndex]);
+
+  useEffect(() => {
+    if (suggestions.length > 0 && searchValue.length >= 2) {
+      setIsDropdownOpen(true);
+    }
+  }, [suggestions, searchValue]);
 
   const isYearInRange = (year: number) => {
     if (period !== "multi-year" || years.length < 2) return false;
@@ -64,14 +129,67 @@ export function SidePanel() {
         {/* Where */}
         <div className="panel-block">
           <div className="label">Where</div>
-          <div className="search-input">
-            <Search size={16} style={{ color: "var(--mute)", flexShrink: 0 }} />
-            <input
-              placeholder="City, address, or admin region…"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-            />
-            <span className="kbd">⌘K</span>
+          <div className="relative">
+            <div className="search-input">
+              <Search size={16} style={{ color: "var(--mute)", flexShrink: 0 }} />
+              <input
+                ref={inputRef}
+                placeholder="City, address, or admin region…"
+                value={searchValue}
+                onChange={(e) => {
+                  setSearchValue(e.target.value);
+                  setHighlightedIndex(-1);
+                }}
+                onKeyDown={handleKeyDown}
+                onFocus={() => {
+                  if (suggestions.length > 0) setIsDropdownOpen(true);
+                }}
+                onBlur={() => {
+                  setTimeout(() => setIsDropdownOpen(false), 150);
+                }}
+                role="combobox"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="listbox"
+                aria-controls="search-suggestions"
+                autoComplete="off"
+              />
+              {isLoading ? (
+                <div className="h-4 w-4 border-2 border-[var(--h6-hex)] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span className="kbd">⌘K</span>
+              )}
+            </div>
+
+            {isDropdownOpen && suggestions.length > 0 && (
+              <ul
+                ref={listRef}
+                id="search-suggestions"
+                role="listbox"
+                className="absolute z-50 w-full mt-1 bg-[var(--surface)] border border-[var(--line)] rounded max-h-60 overflow-auto"
+              >
+                {suggestions.map((suggestion, index) => (
+                  <li
+                    key={suggestion.id}
+                    role="option"
+                    aria-selected={index === highlightedIndex}
+                    onClick={() => handleSelect(suggestion)}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    className={`px-3 py-2 cursor-pointer text-sm transition-colors ${
+                      index === highlightedIndex
+                        ? "bg-[var(--surface-2)] text-[var(--fg)]"
+                        : "text-[var(--mute-2)] hover:bg-[var(--surface-2)]"
+                    }`}
+                  >
+                    <div className="font-medium truncate text-[var(--fg)]">
+                      {suggestion.name}
+                    </div>
+                    <div className="text-xs text-[var(--mute)] truncate">
+                      {suggestion.displayName}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           {admPath.length > 0 && (
             <div className="breadcrumb" style={{ marginTop: 12 }}>
