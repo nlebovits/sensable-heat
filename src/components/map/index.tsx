@@ -6,7 +6,7 @@ import { addProtocol, removeProtocol } from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import DeckGL from "@deck.gl/react";
-import { MapView, _GlobeView as GlobeView, FlyToInterpolator } from "@deck.gl/core";
+import { MapView, _GlobeView as GlobeView } from "@deck.gl/core";
 import { GeoJsonLayer } from "@deck.gl/layers";
 import type { MapViewState, Layer } from "@deck.gl/core";
 
@@ -16,7 +16,7 @@ import { Legend } from "@/components/map-chrome/legend";
 import { ZoomStack } from "@/components/map-chrome/zoom-stack";
 import { Attribution } from "@/components/map-chrome/attribution";
 
-const { GLOBE_ZOOM_THRESHOLD, TRANSITION_DURATION } = MAP_CONFIG;
+const { GLOBE_ZOOM_THRESHOLD } = MAP_CONFIG;
 
 export function MapContainer() {
   const {
@@ -58,15 +58,13 @@ export function MapContainer() {
       .catch(console.error);
   }, []);
 
-  const viewState: MapViewState = useMemo(
+  const viewState = useMemo(
     () => ({
       latitude,
       longitude,
       zoom,
       bearing,
       pitch,
-      transitionDuration: TRANSITION_DURATION,
-      transitionInterpolator: new FlyToInterpolator(),
     }),
     [latitude, longitude, zoom, bearing, pitch]
   );
