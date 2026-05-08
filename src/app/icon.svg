@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <g fill="none" stroke="#f2f1ec" stroke-width="3" stroke-linecap="butt">
+    <path d="M 1.5 10 L 1.5 1.5 L 10 1.5"></path>
+    <path d="M 54 1.5 L 62.5 1.5 L 62.5 10"></path>
+    <path d="M 62.5 54 L 62.5 62.5 L 54 62.5"></path>
+    <path d="M 10 62.5 L 1.5 62.5 L 1.5 54"></path>
+  </g>
+  <text x="32" y="32" fill="#f2f1ec" font-family="&#39;IBM Plex Mono&#39;, ui-monospace, monospace" font-weight="700" font-size="38" text-anchor="middle" dominant-baseline="central">s</text>
+</svg>
