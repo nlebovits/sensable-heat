@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import { Topbar } from "@/components/topbar";
 import { SidePanel } from "@/components/side-panel";
 import { MapContainer } from "@/components/map";
 import { useMapStore } from "@/store/map-store";
@@ -21,12 +20,9 @@ function AppContent() {
   }, [theme]);
 
   return (
-    <div className="flex flex-col h-full">
-      <Topbar />
-      <div className="flex flex-1 min-h-0">
-        <SidePanel />
-        <MapContainer />
-      </div>
+    <div className="flex h-full">
+      <SidePanel />
+      <MapContainer />
     </div>
   );
 }

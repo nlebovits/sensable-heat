@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Minus, Locate } from "@/components/icons";
+import { Plus, Minus, Locate, Sun, Moon } from "@/components/icons";
 import { useMapStore } from "@/store/map-store";
 
 interface ZoomStackProps {
@@ -10,6 +10,8 @@ interface ZoomStackProps {
 }
 
 export function ZoomStack({ onZoomIn, onZoomOut, onLocate }: ZoomStackProps) {
+  const { theme, toggleTheme } = useMapStore();
+
   return (
     <div className="zoom-stack" role="group" aria-label="Map controls">
       <button
@@ -32,6 +34,17 @@ export function ZoomStack({ onZoomIn, onZoomOut, onLocate }: ZoomStackProps) {
         aria-label="Go to my location"
       >
         <Locate size={16} aria-hidden="true" />
+      </button>
+      <button
+        onClick={toggleTheme}
+        title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+        aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      >
+        {theme === "dark" ? (
+          <Sun size={16} aria-hidden="true" />
+        ) : (
+          <Moon size={16} aria-hidden="true" />
+        )}
       </button>
     </div>
   );
