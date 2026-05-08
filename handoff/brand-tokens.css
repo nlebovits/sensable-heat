@@ -1,0 +1,111 @@
+/* ============================================================
+   Sensable Heat — brand tokens
+   Drop into app/globals.css (or import as a layer).
+   Pair with IBM Plex Sans (UI) and IBM Plex Mono (labels).
+   ============================================================ */
+
+:root {
+  /* ---- Neutrals (dark default) ---- */
+  --bg:        #0c0e11;
+  --surface:   #14171b;
+  --surface-2: #1a1d22;
+  --line:      #23272d;
+  --line-2:    #2c3036;
+  --fg:        #f2f1ec;
+  --mute:      #6b6e74;
+  --mute-2:    #9a9d9f;
+
+  /* ---- 9-step OKLCH heat ramp ---- */
+  --h0: oklch(0.18 0.04 25);
+  --h1: oklch(0.26 0.07 25);
+  --h2: oklch(0.34 0.10 27);
+  --h3: oklch(0.42 0.12 28);
+  --h4: oklch(0.50 0.14 30);
+  --h5: oklch(0.58 0.16 32);
+  --h6: oklch(0.66 0.17 34);
+  --h7: oklch(0.74 0.16 36);
+  --h8: oklch(0.82 0.14 40);
+
+  /* ---- Hex fallbacks for the GPU LUT ---- */
+  --h0-hex: #2b1410;
+  --h1-hex: #401a14;
+  --h2-hex: #592118;
+  --h3-hex: #75281c;
+  --h4-hex: #913020;
+  --h5-hex: #ae3a26;
+  --h6-hex: #c75426;  /* primary heat accent */
+  --h7-hex: #df7438;
+  --h8-hex: #ee9a52;
+
+  /* ---- Type tokens ---- */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --text-xs:    11px;
+  --text-sm:    13px;
+  --text-base:  14px;
+  --text-md:    16px;
+  --text-lg:    20px;
+  --text-xl:    28px;
+  --text-2xl:   40px;
+  --text-3xl:   56px;
+
+  /* Mono "label" treatment used for eyebrows, legends, coordinates */
+  --label-size: 10px;
+  --label-tracking: 0.16em;
+
+  /* ---- Layout ---- */
+  --topbar-h: 48px;
+  --panel-w: 380px;
+  --radius: 4px;
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(.2, .7, .2, 1);
+  --view-snap-ms: 700ms;
+}
+
+/* ---- Light theme ---- */
+body.light, [data-theme="light"] {
+  --bg:        #f2f1ec;
+  --surface:   #ffffff;
+  --surface-2: #f7f6f1;
+  --line:      #d8d6cf;
+  --line-2:    #c5c2b8;
+  --fg:        #0c0e11;
+  --mute:      #8a8a85;
+  --mute-2:    #5e5e5a;
+}
+
+/* ============================================================
+   Wordmark — bracket settings dialed in. Lift verbatim.
+   ============================================================ */
+.wordmark {
+  font-family: var(--font-mono); font-weight: 700;
+  text-transform: lowercase; letter-spacing: 0.01em; line-height: 1;
+  color: var(--fg); white-space: nowrap;
+  display: inline-flex; align-items: center;
+}
+.sens-target {
+  position: relative; display: inline-block;
+  padding: 5px 10px;
+  margin: 0 4px 0 0;
+}
+.vf-corner {
+  position: absolute; width: 10px; height: 10px;
+  border-color: currentColor; border-style: solid; border-width: 0;
+}
+.vf-corner.tl { top: 0; left: 0;     border-top-width: 3px;    border-left-width: 3px; }
+.vf-corner.tr { top: 0; right: 0;    border-top-width: 3px;    border-right-width: 3px; }
+.vf-corner.bl { bottom: 0; left: 0;  border-bottom-width: 3px; border-left-width: 3px; }
+.vf-corner.br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; }
+
+/* ============================================================
+   Mono label utility — used everywhere for eyebrows/legends
+   ============================================================ */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--mute);
+}

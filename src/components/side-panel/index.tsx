@@ -1,0 +1,242 @@
+"use client";
+
+import { Wordmark } from "@/components/wordmark";
+import { Search, ChevronDown, ArrowRight, Info } from "@/components/icons";
+import { useMapStore, type Period, type Compositing } from "@/store/map-store";
+import { useState } from "react";
+
+const PERIODS: Period[] = ["single year", "multi-year", "rolling avg"];
+const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
+const COMPOSITING_OPTIONS: { value: Compositing; label: string }[] = [
+  { value: "p99", label: "p99 — extreme days" },
+  { value: "p95", label: "p95 — hot days" },
+  { value: "mean", label: "mean — typical" },
+  { value: "max", label: "max — single peak" },
+];
+
+export function SidePanel() {
+  const {
+    period,
+    years,
+    compositing,
+    showAdm,
+    showSatellite,
+    admPath,
+    setPeriod,
+    toggleYear,
+    setCompositing,
+    setShowAdm,
+    setShowSatellite,
+  } = useMapStore();
+
+  const [searchValue, setSearchValue] = useState("");
+  const [aboutOpen, setAboutOpen] = useState(true);
+
+  const isYearInRange = (year: number) => {
+    if (period !== "multi-year" || years.length < 2) return false;
+    const min = Math.min(...years);
+    const max = Math.max(...years);
+    return year > min && year < max && !years.includes(year);
+  };
+
+  return (
+    <aside className="panel left">
+      <div className="panel-inner">
+        {/* Header */}
+        <div className="panel-block" style={{ borderBottom: "none", paddingBottom: 8 }}>
+          <div className="mono-label" style={{ marginBottom: 12 }}>
+            A Radiant Earth project
+          </div>
+          <Wordmark size={20} />
+          <p
+            style={{
+              fontSize: "var(--text-sm)",
+              color: "var(--mute-2)",
+              lineHeight: 1.5,
+              marginTop: 14,
+            }}
+          >
+            Where heat reaches the ground. A global, high-resolution measurement
+            of land surface temperature, made plain enough to plan against.
+          </p>
+        </div>
+
+        {/* Where */}
+        <div className="panel-block">
+          <div className="label">Where</div>
+          <div className="search-input">
+            <Search size={16} style={{ color: "var(--mute)", flexShrink: 0 }} />
+            <input
+              placeholder="City, address, or admin region…"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+            <span className="kbd">⌘K</span>
+          </div>
+          {admPath.length > 0 && (
+            <div className="breadcrumb" style={{ marginTop: 12 }}>
+              {admPath.map((seg, i) => (
+                <span key={i}>
+                  {i > 0 && <span className="sep">›</span>}
+                  <span className={`seg ${i === admPath.length - 1 ? "active" : ""}`}>
+                    {seg}
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* When */}
+        <div className="panel-block">
+          <div className="label">
+            <span>When</span>
+            <Info size={14} style={{ color: "var(--mute)", cursor: "help" }} />
+          </div>
+          <div className="seg-group" style={{ marginBottom: 10 }}>
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                className={period === p ? "active" : ""}
+                onClick={() => setPeriod(p)}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <div className="year-grid">
+            {YEARS.map((y) => (
+              <button
+                key={y}
+                className={
+                  years.includes(y) ? "active" : isYearInRange(y) ? "in-range" : ""
+                }
+                onClick={() => toggleYear(y)}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <div className="label" style={{ marginBottom: 8 }}>
+              Compositing
+            </div>
+            <div className="chip-row">
+              {COMPOSITING_OPTIONS.map((c) => (
+                <button
+                  key={c.value}
+                  className={`chip ${compositing === c.value ? "active" : ""}`}
+                  onClick={() => setCompositing(c.value)}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Layers */}
+        <div className="panel-block">
+          <div className="label">Layers</div>
+          <div className="toggle-row">
+            <span>
+              <span className="name">Land surface temperature</span>
+              <span className="sub">Landsat 8/9 · 30m</span>
+            </span>
+            <span className="switch on" />
+          </div>
+          <div className="toggle-row">
+            <span>
+              <span className="name">Admin boundaries</span>
+              <span className="sub">GADM · adm0 → adm3</span>
+            </span>
+            <span
+              className={`switch ${showAdm ? "on" : ""}`}
+              onClick={() => setShowAdm(!showAdm)}
+            />
+          </div>
+          <div className="toggle-row">
+            <span>
+              <span className="name">Satellite imagery</span>
+              <span className="sub">Sentinel-2 · cloud-free</span>
+            </span>
+            <span
+              className={`switch ${showSatellite ? "on" : ""}`}
+              onClick={() => setShowSatellite(!showSatellite)}
+            />
+          </div>
+        </div>
+
+        {/* About */}
+        <details className="disclose" open={aboutOpen} onToggle={(e) => setAboutOpen(e.currentTarget.open)}>
+          <summary>
+            About this measurement
+            <ChevronDown size={16} />
+          </summary>
+          <div className="body">
+            <p>
+              Land surface temperature (LST) is the temperature of the ground
+              itself — pavement, rooftops, soil — not the air above it. It
+              reaches the body through radiation, contact, and the absence of
+              shade.
+            </p>
+            <p>
+              This map composites every cloud-free Landsat 8 and 9 thermal scene
+              over the years and percentile you choose, at 30m resolution. p95
+              isolates hot days; p99 isolates extremes.
+            </p>
+          </div>
+        </details>
+
+        {/* Resources */}
+        <div className="panel-block">
+          <div className="label">Resources</div>
+          <a
+            className="resource"
+            href="https://coolcities.wri.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <div className="name">Cool Cities Challenge</div>
+              <div className="source">World Resources Institute</div>
+            </div>
+            <span className="arrow">
+              <ArrowRight size={16} />
+            </span>
+          </a>
+          <a
+            className="resource"
+            href="https://www.wri.org/insights/beyond-thermometer-measuring-heat"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <div className="name">Beyond the thermometer: measuring heat</div>
+              <div className="source">WRI Insights</div>
+            </div>
+            <span className="arrow">
+              <ArrowRight size={16} />
+            </span>
+          </a>
+        </div>
+
+        {/* Footer */}
+        <div className="panel-footer">
+          <div className="row">
+            <span>Data</span>
+            <span>Landsat C2 L2</span>
+          </div>
+          <div className="row">
+            <span>Hosted</span>
+            <span>Source Coop</span>
+          </div>
+          <div className="row">
+            <span>Build</span>
+            <span>v0.1 · 2026-05</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

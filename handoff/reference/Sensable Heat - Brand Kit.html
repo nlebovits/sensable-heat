@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sensable Heat — Brand Kit</title>
+<meta name="viewport" content="width=1280">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e11;
+    --surface: #14171b;
+    --line: #23272d;
+    --fg: #f2f1ec;
+    --mute: #6b6e74;
+    --mute-2: #9a9d9f;
+
+    --light-bg: #f2f1ec;
+    --light-fg: #0c0e11;
+    --light-mute: #8a8a85;
+
+    /* Heat ramp — single-hue OKLCH, luminance-stepped, colorblind-discriminable */
+    --h0: oklch(0.18 0.04 25);
+    --h1: oklch(0.26 0.07 25);
+    --h2: oklch(0.34 0.10 27);
+    --h3: oklch(0.42 0.12 28);
+    --h4: oklch(0.50 0.14 30);
+    --h5: oklch(0.58 0.16 32);
+    --h6: oklch(0.66 0.17 34);
+    --h7: oklch(0.74 0.16 36);
+    --h8: oklch(0.82 0.14 40);
+  }
+
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .meta { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); }
+  .meta-sm { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
+
+  .container { max-width: 1240px; margin: 0 auto; padding: 0 56px; }
+
+  /* ──────── Top strip ──────── */
+  .top-strip {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 56px; border-bottom: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute);
+  }
+  .top-strip .right { display: flex; gap: 32px; }
+
+  /* ──────── Hero ──────── */
+  .hero { padding: 120px 0 100px; border-bottom: 1px solid var(--line); }
+  .hero h1 { margin: 0; font-size: 92px; line-height: 1; letter-spacing: -0.01em; font-weight: 500; max-width: 920px; text-wrap: balance; }
+  .hero .lede { margin: 32px 0 0; font-size: 18px; line-height: 1.5; max-width: 640px; color: var(--mute-2); }
+  .hero .ver { margin-top: 56px; }
+
+  /* ──────── Section frame ──────── */
+  section { padding: 100px 0; border-bottom: 1px solid var(--line); }
+  section .head { display: grid; grid-template-columns: 220px 1fr; gap: 56px; margin-bottom: 56px; align-items: baseline; }
+  section h2 { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); font-weight: 500; }
+  section .head .label-num { color: var(--fg); }
+  section h3 { margin: 0; font-size: 36px; line-height: 1.15; letter-spacing: -0.005em; font-weight: 500; max-width: 720px; }
+  section .lead { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: var(--mute-2); max-width: 620px; }
+
+  /* ──────── Wordmark primitive ──────── */
+  .wordmark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    text-transform: lowercase;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    color: var(--fg);
+    white-space: nowrap;
+    display: inline-flex; align-items: center;
+  }
+  .sens-target {
+    position: relative; display: inline-block;
+    padding: 4px 4px;
+    margin: 0 4px 0 0;
+  }
+  .vf-corner { position: absolute; width: 10px; height: 10px; border-color: currentColor; border-style: solid; border-width: 0; }
+  .vf-corner.tl { top: 0; left: 0; border-top-width: 2.25px; border-left-width: 2.25px; }
+  .vf-corner.tr { top: 0; right: 0; border-top-width: 2.25px; border-right-width: 2.25px; }
+  .vf-corner.bl { bottom: 0; left: 0; border-bottom-width: 2.25px; border-left-width: 2.25px; }
+  .vf-corner.br { bottom: 0; right: 0; border-bottom-width: 2.25px; border-right-width: 2.25px; }
+
+  /* ──────── 1 — Logo ──────── */
+  .logo-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
+  .logo-box {
+    border: 1px solid var(--line); border-radius: 0; padding: 80px 56px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; min-height: 280px;
+  }
+  .logo-box.dark { background: var(--bg); }
+  .logo-box.light { background: var(--light-bg); color: var(--light-fg); }
+  .logo-box .corner-tag { position: absolute; top: 14px; left: 16px; }
+  .logo-box.dark .corner-tag { color: var(--mute); }
+  .logo-box.light .corner-tag { color: var(--light-mute); }
+  .logo-box .size-tag { position: absolute; bottom: 14px; right: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .logo-box.dark .size-tag { color: var(--mute); }
+  .logo-box.light .size-tag { color: var(--light-mute); }
+
+  .wm-32 { font-size: 32px; }
+  .wm-24 { font-size: 24px; }
+  .wm-18 { font-size: 18px; }
+  .wm-14 { font-size: 14px; }
+
+  /* Wordmark sizes row */
+  .scale-row { display: flex; flex-direction: column; gap: 28px; padding: 56px; border: 1px solid var(--line); }
+  .scale-line { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .scale-line .px { color: var(--mute); }
+
+  /* ──────── Favicon ──────── */
+  .favicons { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .fv {
+    border: 1px solid var(--line);
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 28px 16px;
+    min-width: 132px;
+  }
+  .fv .label { margin-top: 18px; }
+  .fv .stage { display: flex; align-items: center; justify-content: center; }
+  .fv-mark {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700;
+    color: var(--fg);
+  }
+  .fv-mark .vf-corner { width: 10px; height: 10px; }
+  /* sized variants */
+  .fv-mark.s64 { width: 64px; height: 64px; font-size: 38px; }
+  .fv-mark.s32 { width: 32px; height: 32px; font-size: 19px; }
+  .fv-mark.s32 .vf-corner { width: 6px; height: 6px; border-width: 1.5px !important; }
+  .fv-mark.s32 .vf-corner.tl { border-right-width: 0 !important; border-bottom-width: 0 !important; }
+  .fv-mark.s32 .vf-corner.tr { border-left-width: 0 !important; border-bottom-width: 0 !important; }
+  .fv-mark.s32 .vf-corner.bl { border-right-width: 0 !important; border-top-width: 0 !important; }
+  .fv-mark.s32 .vf-corner.br { border-left-width: 0 !important; border-top-width: 0 !important; }
+  .fv-mark.s16 { width: 16px; height: 16px; font-size: 10px; }
+  .fv-mark.s16 .vf-corner { width: 4px; height: 4px; border-width: 1px !important; }
+  .fv-mark.s16 .vf-corner.tl { border-right-width: 0 !important; border-bottom-width: 0 !important; }
+  .fv-mark.s16 .vf-corner.tr { border-left-width: 0 !important; border-bottom-width: 0 !important; }
+  .fv-mark.s16 .vf-corner.bl { border-right-width: 0 !important; border-top-width: 0 !important; }
+  .fv-mark.s16 .vf-corner.br { border-left-width: 0 !important; border-top-width: 0 !important; }
+  .fv-mark .glyph { display: inline-block; line-height: 1; transform: translateY(-0.5px); }
+
+  .fv.light { background: var(--light-bg); }
+  .fv.light .fv-mark { color: var(--light-fg); }
+
+  /* ──────── Type ──────── */
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .type-card { border: 1px solid var(--line); padding: 40px 40px 36px; display: flex; flex-direction: column; gap: 28px; min-height: 360px; }
+  .type-card .glyph-row { font-size: 96px; line-height: 1; letter-spacing: -0.01em; }
+  .type-card .glyph-row.mono { font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+  .type-card .glyph-row.sans { font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; }
+  .type-card .role { color: var(--mute-2); }
+  .type-card .role strong { color: var(--fg); font-weight: 500; }
+  .type-card .footer { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; align-items: end; }
+
+  .scale-table { width: 100%; border: 1px solid var(--line); border-collapse: collapse; }
+  .scale-table th, .scale-table td { text-align: left; padding: 18px 24px; border-bottom: 1px solid var(--line); vertical-align: baseline; }
+  .scale-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); font-weight: 500; }
+  .scale-table tr:last-child td { border-bottom: 0; }
+  .scale-table .sample { font-family: 'IBM Plex Sans', sans-serif; }
+  .scale-table .sample.mono { font-family: 'IBM Plex Mono', monospace; }
+  .scale-table .px-col { color: var(--mute); width: 100px; }
+  .scale-table .role-col { color: var(--mute-2); width: 220px; }
+
+  /* ──────── Color ──────── */
+  .neutral-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; border: 1px solid var(--line); }
+  .swatch { aspect-ratio: 4 / 5; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; }
+  .swatch.dark { background: #0c0e11; color: #f2f1ec; }
+  .swatch .name { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .swatch .val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.5; opacity: 0.7; }
+  .swatch.bordered { border-right: 1px solid var(--line); }
+
+  /* Heat ramp */
+  .ramp { display: grid; grid-template-columns: repeat(9, 1fr); border: 1px solid var(--line); }
+  .ramp-cell {
+    aspect-ratio: 1 / 1.6;
+    padding: 14px 12px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    color: var(--fg);
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em;
+  }
+  .ramp-cell.lit { color: #14171b; } /* dark text on light cells */
+  .ramp-cell .step { letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.7; }
+  .ramp-cell .lst { font-size: 11px; }
+
+  .ramp-axes { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; margin-top: 14px; }
+  .ramp-axes .l, .ramp-axes .r { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
+  .ramp-axes .r { text-align: right; }
+  .ramp-axes .span { height: 1px; background: var(--line); }
+
+  /* CVD simulation row */
+  .cvd { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: center; padding: 18px 0; border-top: 1px solid var(--line); }
+  .cvd:first-child { border-top: 0; }
+  .cvd .name { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute-2); }
+  .cvd .name em { display: block; font-style: normal; font-size: 10px; color: var(--mute); margin-top: 4px; letter-spacing: 0.1em; }
+  .cvd-bar { display: flex; height: 36px; border: 1px solid var(--line); }
+  .cvd-bar > span { flex: 1; }
+  .cvd-bar.normal > span:nth-child(1) { background: var(--h0); }
+  .cvd-bar.normal > span:nth-child(2) { background: var(--h1); }
+  .cvd-bar.normal > span:nth-child(3) { background: var(--h2); }
+  .cvd-bar.normal > span:nth-child(4) { background: var(--h3); }
+  .cvd-bar.normal > span:nth-child(5) { background: var(--h4); }
+  .cvd-bar.normal > span:nth-child(6) { background: var(--h5); }
+  .cvd-bar.normal > span:nth-child(7) { background: var(--h6); }
+  .cvd-bar.normal > span:nth-child(8) { background: var(--h7); }
+  .cvd-bar.normal > span:nth-child(9) { background: var(--h8); }
+
+  /* SVG-based deuteranopia / protanopia / tritanopia / mono filters */
+  .cvd-bar.deuter { filter: url(#deuter); }
+  .cvd-bar.proto { filter: url(#proto); }
+  .cvd-bar.trito { filter: url(#trito); }
+  .cvd-bar.mono { filter: grayscale(1); }
+
+  /* ──────── Imagery ──────── */
+  .imagery {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+  }
+  .img-panel { border: 1px solid var(--line); padding: 56px; display: flex; flex-direction: column; align-items: center; gap: 24px; min-height: 480px; justify-content: center; }
+  .dither-globe {
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 30%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 18%, rgba(255,255,255,0.05) 42%, rgba(255,255,255,0) 60%),
+      radial-gradient(circle at 50% 50%, #2a2d31 0%, #14171b 70%);
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .dither-globe::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(currentColor 0.7px, transparent 0.8px);
+    background-size: 3px 3px;
+    color: rgba(255,255,255,0.25);
+    mix-blend-mode: lighten;
+  }
+  .dither-globe::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(#0c0e11 1px, transparent 1.2px);
+    background-size: 3px 3px;
+    background-position: 1.5px 1.5px;
+    opacity: 0.55;
+  }
+
+  /* Light variant */
+  .dither-globe.light {
+    background:
+      radial-gradient(circle at 32% 30%, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.0) 18%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%),
+      radial-gradient(circle at 50% 50%, #f2f1ec 0%, #d4d2cb 70%);
+  }
+  .dither-globe.light::before { color: rgba(0,0,0,0.25); }
+  .dither-globe.light::after { background-image: radial-gradient(#f2f1ec 1px, transparent 1.2px); }
+
+  .img-panel.light { background: var(--light-bg); }
+
+  /* Pin sample to evoke source coop "green dot" treatment */
+  .pin {
+    position: absolute; width: 10px; height: 10px; border-radius: 50%;
+    background: oklch(0.78 0.18 38);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.4), 0 0 8px oklch(0.78 0.18 38);
+  }
+  .pin-1 { top: 22%; left: 56%; }
+  .pin-2 { top: 38%; left: 28%; }
+  .pin-3 { top: 64%; left: 70%; }
+
+  /* ──────── Voice ──────── */
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+  .voice-grid h4 { margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); font-weight: 500; }
+  .voice-grid p { margin: 0 0 16px; font-size: 16px; line-height: 1.55; color: var(--mute-2); }
+  .voice-grid p strong { color: var(--fg); font-weight: 500; }
+  .voice-grid ul { margin: 0; padding: 0; list-style: none; }
+  .voice-grid li { padding: 14px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 56px 1fr; gap: 16px; font-size: 14px; line-height: 1.5; }
+  .voice-grid li .y, .voice-grid li .n { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; padding-top: 2px; }
+  .voice-grid li .y { color: oklch(0.74 0.13 145); }
+  .voice-grid li .n { color: oklch(0.65 0.18 30); }
+  .voice-grid li:first-child { border-top: 0; }
+
+  /* ──────── Footer ──────── */
+  footer { padding: 56px; display: flex; justify-content: space-between; align-items: baseline; }
+  footer .right { display: flex; gap: 32px; }
+</style>
+</head>
+<body>
+
+<!-- SVG color-blind simulation matrices, inlined for filter targets -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="deuter">
+      <feColorMatrix type="matrix" values="
+        0.625 0.375 0 0 0
+        0.7   0.3   0 0 0
+        0     0.3   0.7 0 0
+        0     0     0   1 0"/>
+    </filter>
+    <filter id="proto">
+      <feColorMatrix type="matrix" values="
+        0.567 0.433 0 0 0
+        0.558 0.442 0 0 0
+        0     0.242 0.758 0 0
+        0     0     0   1 0"/>
+    </filter>
+    <filter id="trito">
+      <feColorMatrix type="matrix" values="
+        0.95 0.05  0    0 0
+        0    0.433 0.567 0 0
+        0    0.475 0.525 0 0
+        0    0     0     1 0"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Top strip -->
+<div class="top-strip">
+  <span>Sensable Heat / Brand Kit</span>
+  <span class="right">
+    <span>v0.1</span>
+    <span>2026.05</span>
+  </span>
+</div>
+
+<!-- Hero -->
+<div class="container">
+<div class="hero">
+  <div class="meta">001 — Identity</div>
+  <h1 style="margin-top: 28px;">A public reading of urban heat.</h1>
+  <p class="lede">Sensable Heat is a global, high-resolution land-surface-temperature map for municipal decision-makers. The brand is plain, instrumented, and quietly serious — built to sit on the desks of the people who plan cities, not the ones who pitch them.</p>
+
+  <div class="ver">
+    <span class="wordmark wm-32">
+      <span class="sens-target">
+        <span class="vf-corner tl"></span>
+        <span class="vf-corner tr"></span>
+        <span class="vf-corner bl"></span>
+        <span class="vf-corner br"></span>sens</span>able heat
+    </span>
+  </div>
+</div>
+</div>
+
+<!-- ──────── 01 LOGO ──────── -->
+<section>
+  <div class="container">
+    <div class="head">
+      <h2><span class="label-num">01</span> &nbsp;·&nbsp; Logo</h2>
+      <div>
+        <h3>The viewfinder is the brand.</h3>
+        <p class="lead">Four corner brackets frame the word <span class="mono">sens</span> — naming the satellite-sensing lineage and the deliberate misspelling in one move. The wordmark always sets in IBM Plex Mono Bold, lowercase, with the brackets locked at 2.25 pt and 4 px padding around the targeted glyphs.</p>
+      </div>
+    </div>
+
+    <div class="logo-grid">
+      <div class="logo-box dark">
+        <span class="corner-tag meta-sm">primary · dark</span>
+        <span class="wordmark wm-32">
+          <span class="sens-target">
+            <span class="vf-corner tl"></span>
+            <span class="vf-corner tr"></span>
+            <span class="vf-corner bl"></span>
+            <span class="vf-corner br"></span>sens</span>able heat
+        </span>
+        <span class="size-tag">32 / 0.01em</span>
+      </div>
+      <div class="logo-box light">
+        <span class="corner-tag meta-sm" style="color:#8a8a85">primary · light</span>
+        <span class="wordmark wm-32" style="color: var(--light-fg)">
+          <span class="sens-target">
+            <span class="vf-corner tl"></span>
+            <span class="vf-corner tr"></span>
+            <span class="vf-corner bl"></span>
+            <span class="vf-corner br"></span>sens</span>able heat
+        </span>
+        <span class="size-tag" style="color:#8a8a85">32 / 0.01em</span>
+      </div>
+    </div>
+
+    <!-- Sizes -->
+    <div style="margin-top: 24px;">
+      <div class="scale-row">
+        <div class="scale-line">
+          <span class="wordmark wm-32">
+            <span class="sens-target">
+              <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
+              <span class="vf-corner bl"></span><span class="vf-corner br"></span>sens</span>able heat
+          </span>
+          <span class="meta-sm px">32 px · primary · web header, deck title</span>
+        </div>
+        <div class="scale-line">
+          <span class="wordmark wm-24">
+            <span class="sens-target" style="padding: 3px 3px; margin: 0 3px 0 0;">
+              <span class="vf-corner tl" style="width:8px;height:8px;"></span><span class="vf-corner tr" style="width:8px;height:8px;"></span>
+              <span class="vf-corner bl" style="width:8px;height:8px;"></span><span class="vf-corner br" style="width:8px;height:8px;"></span>sens</span>able heat
+          </span>
+          <span class="meta-sm px">24 px · navigation, body text headers</span>
+        </div>
+        <div class="scale-line">
+          <span class="wordmark wm-18">
+            <span class="sens-target" style="padding: 2px 2px; margin: 0 3px 0 0;">
+              <span class="vf-corner tl" style="width:6px;height:6px;border-top-width:1.5px !important;border-left-width:1.5px !important"></span><span class="vf-corner tr" style="width:6px;height:6px;border-top-width:1.5px !important;border-right-width:1.5px !important"></span>
+              <span class="vf-corner bl" style="width:6px;height:6px;border-bottom-width:1.5px !important;border-left-width:1.5px !important"></span><span class="vf-corner br" style="width:6px;height:6px;border-bottom-width:1.5px !important;border-right-width:1.5px !important"></span>sens</span>able heat
+          </span>
+          <span class="meta-sm px">18 px · footer, small-format application</span>
+        </div>
+        <div class="scale-line">
+          <span class="wordmark wm-14">
+            <span class="sens-target" style="padding: 2px 2px; margin: 0 2px 0 0;">
+              <span class="vf-corner tl" style="width:4px;height:4px;border-top-width:1px !important;border-left-width:1px !important"></span><span class="vf-corner tr" style="width:4px;height:4px;border-top-width:1px !important;border-right-width:1px !important"></span>
+              <span class="vf-corner bl" style="width:4px;height:4px;border-bottom-width:1px !important;border-left-width:1px !important"></span><span class="vf-corner br" style="width:4px;height:4px;border-bottom-width:1px !important;border-right-width:1px !important"></span>sens</span>able heat
+          </span>
+          <span class="meta-sm px">14 px · minimum legible · do not set smaller</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 02 FAVICON / MARK ──────── -->
+<section>
+  <div class="container">
+    <div class="head">
+      <h2><span class="label-num">02</span> &nbsp;·&nbsp; Mark</h2>
+      <div>
+        <h3>A symmetrical viewfinder around the letter <span class="mono">s</span>.</h3>
+        <p class="lead">For favicons, app icons, social avatars, and any context where the wordmark won&rsquo;t fit. The mark uses equal padding on all sides of a single lowercase <span class="mono">s</span>, locked inside the same four-corner viewfinder. At 16 px and below, brackets reduce to L-shapes (two sides only) and stroke drops to 1 px.</p>
+      </div>
+    </div>
+
+    <div class="favicons">
+      <div class="fv">
+        <div class="stage">
+          <span class="fv-mark s64">
+            <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
+            <span class="vf-corner bl"></span><span class="vf-corner br"></span>
+            <span class="glyph">s</span>
+          </span>
+        </div>
+        <span class="meta-sm label">64 px · app</span>
+      </div>
+      <div class="fv">
+        <div class="stage">
+          <span class="fv-mark s32">
+            <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
+            <span class="vf-corner bl"></span><span class="vf-corner br"></span>
+            <span class="glyph">s</span>
+          </span>
+        </div>
+        <span class="meta-sm label">32 px · favicon</span>
+      </div>
+      <div class="fv">
+        <div class="stage">
+          <span class="fv-mark s16">
+            <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
+            <span class="vf-corner bl"></span><span class="vf-corner br"></span>
+            <span class="glyph">s</span>
+          </span>
+        </div>
+        <span class="meta-sm label">16 px · tab</span>
+      </div>
+      <div class="fv light">
+        <div class="stage">
+          <span class="fv-mark s64">
+            <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
+            <span class="vf-corner bl"></span><span class="vf-corner br"></span>
+            <span class="glyph">s</span>
+          </span>
+        </div>
+        <span class="meta-sm label" style="color:#8a8a85">64 px · light</span>
+      </div>
+      <div class="fv" style="background: var(--h6);">
+        <div class="stage">
+          <span class="fv-mark s64" style="color:#0c0e11;">
+            <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
+            <span class="vf-corner bl"></span><span class="vf-corner br"></span>
+            <span class="glyph">s</span>
+          </span>
+        </div>
+        <span class="meta-sm label" style="color:#0c0e11; opacity: 0.6;">64 px · heat fill</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 03 TYPE ──────── -->
+<section>
+  <div class="container">
+    <div class="head">
+      <h2><span class="label-num">03</span> &nbsp;·&nbsp; Type</h2>
+      <div>
+        <h3>IBM Plex Mono leads. IBM Plex Sans supports.</h3>
+        <p class="lead">Mono carries the brand &mdash; logo, all-caps tags, axis labels, coordinates, hex values, anything that reads as instrument output. Sans carries narrative &mdash; titles, paragraphs, captions on long-form pages and reports. Both ship in regular, medium, semibold, and bold; everything else is one of these.</p>
+      </div>
+    </div>
+
+    <div class="type-grid">
+      <div class="type-card">
+        <div class="meta-sm">primary · display + utility</div>
+        <div class="glyph-row mono">Aa Aa Aa</div>
+        <div class="role"><strong>IBM Plex Mono</strong> &mdash; wordmark, taglines, metadata strips, axis labels, coordinates, all-caps section heads, code, all numeric readouts.</div>
+        <div class="footer">
+          <span class="meta-sm">400 / 500 / 600 / 700</span>
+          <span class="meta-sm">letter-spacing 0.14&ndash;0.18em uppercase</span>
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="meta-sm">support · narrative</div>
+        <div class="glyph-row sans">Aa Aa Aa</div>
+        <div class="role"><strong>IBM Plex Sans</strong> &mdash; long-form titles, body, captions, button labels in flowing UI, marketing copy, report prose.</div>
+        <div class="footer">
+          <span class="meta-sm">400 / 500 / 600 / 700</span>
+          <span class="meta-sm">letter-spacing -0.005em titles</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+      <table class="scale-table">
+        <thead>
+          <tr>
+            <th class="role-col">Role</th>
+            <th class="px-col">Size / line</th>
+            <th>Sample</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="role-col">Display</td>
+            <td class="px-col mono">92 / 1.0</td>
+            <td><span class="sample" style="font-size:48px;line-height:1;letter-spacing:-0.01em;">A public reading of urban heat.</span></td>
+          </tr>
+          <tr>
+            <td class="role-col">Section title</td>
+            <td class="px-col mono">36 / 1.15</td>
+            <td><span class="sample" style="font-size:28px;line-height:1.15;">The viewfinder is the brand.</span></td>
+          </tr>
+          <tr>
+            <td class="role-col">Subtitle</td>
+            <td class="px-col mono">20 / 1.4</td>
+            <td><span class="sample" style="font-size:18px;line-height:1.4;color:var(--mute-2);">Land surface temperature, mapped globally at 30 m.</span></td>
+          </tr>
+          <tr>
+            <td class="role-col">Body</td>
+            <td class="px-col mono">15 / 1.55</td>
+            <td><span class="sample" style="font-size:14px;line-height:1.55;color:var(--mute-2);">Sensable Heat composites a single annual P95 land&ndash;surface temperature reading from Landsat.</span></td>
+          </tr>
+          <tr>
+            <td class="role-col">Section tag · mono</td>
+            <td class="px-col mono">10 / 1.0</td>
+            <td><span class="sample mono" style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mute);">001 — Identity</span></td>
+          </tr>
+          <tr>
+            <td class="role-col">Coordinate · mono</td>
+            <td class="px-col mono">11 / 1.5</td>
+            <td><span class="sample mono" style="font-size:11px;color:var(--mute);">X,Y: 0468, 0672 · 37.7766°N</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 04 COLOR · neutrals ──────── -->
+<section>
+  <div class="container">
+    <div class="head">
+      <h2><span class="label-num">04</span> &nbsp;·&nbsp; Color · Neutrals</h2>
+      <div>
+        <h3>A near-black and a paper-white. Nothing in between is a brand color.</h3>
+        <p class="lead">The interface is dominantly one of two surfaces &mdash; a deep blue&ndash;black or a warm paper. Hairline lines, mute greys, and text greys sit between them. The heat ramp is the only chromatic system; no secondary brand color competes with it.</p>
+      </div>
+    </div>
+
+    <div class="neutral-grid">
+      <div class="swatch bordered" style="background:#0c0e11;color:#f2f1ec;">
+        <span class="name">bg / dark</span>
+        <span class="val">#0C0E11<br>oklch 0.16 0 250</span>
+      </div>
+      <div class="swatch bordered" style="background:#14171b;color:#f2f1ec;">
+        <span class="name">surface</span>
+        <span class="val">#14171B<br>oklch 0.21 0 250</span>
+      </div>
+      <div class="swatch bordered" style="background:#23272d;color:#f2f1ec;">
+        <span class="name">line</span>
+        <span class="val">#23272D<br>oklch 0.28 0 250</span>
+      </div>
+      <div class="swatch bordered" style="background:#6b6e74;color:#0c0e11;">
+        <span class="name">mute</span>
+        <span class="val">#6B6E74<br>oklch 0.52 0 250</span>
+      </div>
+      <div class="swatch bordered" style="background:#9a9d9f;color:#0c0e11;">
+        <span class="name">mute · 2</span>
+        <span class="val">#9A9D9F<br>oklch 0.69 0 250</span>
+      </div>
+      <div class="swatch" style="background:#f2f1ec;color:#0c0e11;">
+        <span class="name">bg / light</span>
+        <span class="val">#F2F1EC<br>oklch 0.95 0.005 90</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 05 HEAT RAMP ──────── -->
+<section>
+  <div class="container">
+    <div class="head">
+      <h2><span class="label-num">05</span> &nbsp;·&nbsp; Color · Heat Ramp</h2>
+      <div>
+        <h3>Single-hue red. Stepped by luminance, safe across CVD.</h3>
+        <p class="lead">A nine-step sequential ramp built in OKLCH so each step is perceptually equidistant. Hue rotates gently from cool red (25°) to warm red&ndash;orange (40°) as the ramp warms, but the discriminability comes from luminance &mdash; which keeps it readable for protanopia, deuteranopia, tritanopia, and full monochromatic vision.</p>
+      </div>
+    </div>
+
+    <div class="ramp">
+      <div class="ramp-cell" style="background: var(--h0);"><span class="step">L0</span><span class="lst">cold</span></div>
+      <div class="ramp-cell" style="background: var(--h1);"><span class="step">L1</span><span class="lst">&nbsp;</span></div>
+      <div class="ramp-cell" style="background: var(--h2);"><span class="step">L2</span><span class="lst">&nbsp;</span></div>
+      <div class="ramp-cell" style="background: var(--h3);"><span class="step">L3</span><span class="lst">&nbsp;</span></div>
+      <div class="ramp-cell" style="background: var(--h4);"><span class="step">L4</span><span class="lst">median</span></div>
+      <div class="ramp-cell" style="background: var(--h5);"><span class="step">L5</span><span class="lst">&nbsp;</span></div>
+      <div class="ramp-cell lit" style="background: var(--h6);"><span class="step">L6</span><span class="lst">&nbsp;</span></div>
+      <div class="ramp-cell lit" style="background: var(--h7);"><span class="step">L7</span><span class="lst">&nbsp;</span></div>
+      <div class="ramp-cell lit" style="background: var(--h8);"><span class="step">L8</span><span class="lst">hottest</span></div>
+    </div>
+
+    <div class="ramp-axes">
+      <span class="l">cool · 28°C ↓</span>
+      <span class="span" style="width: 100%;"></span>
+      <span class="r">↑ 56°C · hot</span>
+    </div>
+
+    <!-- Hex / OKLCH callouts -->
+    <table class="scale-table" style="margin-top: 32px;">
+      <thead>
+        <tr>
+          <th class="role-col">Step</th>
+          <th class="px-col">OKLCH</th>
+          <th class="px-col">≈ Hex</th>
+          <th>Use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="role-col">L0 · cold</td><td class="px-col mono">0.18 0.04 25</td><td class="px-col mono">#251410</td><td class="sample" style="color:var(--mute-2);font-size:13px;">Map low end / cold-pixel fill</td></tr>
+        <tr><td class="role-col">L1</td><td class="px-col mono">0.26 0.07 25</td><td class="px-col mono">#3D1E16</td><td class="sample" style="color:var(--mute-2);font-size:13px;">&nbsp;</td></tr>
+        <tr><td class="role-col">L2</td><td class="px-col mono">0.34 0.10 27</td><td class="px-col mono">#56281B</td><td class="sample" style="color:var(--mute-2);font-size:13px;">&nbsp;</td></tr>
+        <tr><td class="role-col">L3</td><td class="px-col mono">0.42 0.12 28</td><td class="px-col mono">#71311E</td><td class="sample" style="color:var(--mute-2);font-size:13px;">&nbsp;</td></tr>
+        <tr><td class="role-col">L4 · median</td><td class="px-col mono">0.50 0.14 30</td><td class="px-col mono">#8D3A20</td><td class="sample" style="color:var(--mute-2);font-size:13px;">Default ADM aggregate fill</td></tr>
+        <tr><td class="role-col">L5</td><td class="px-col mono">0.58 0.16 32</td><td class="px-col mono">#AA4421</td><td class="sample" style="color:var(--mute-2);font-size:13px;">&nbsp;</td></tr>
+        <tr><td class="role-col">L6</td><td class="px-col mono">0.66 0.17 34</td><td class="px-col mono">#C75426</td><td class="sample" style="color:var(--mute-2);font-size:13px;">UI accent · selected state, hover</td></tr>
+        <tr><td class="role-col">L7</td><td class="px-col mono">0.74 0.16 36</td><td class="px-col mono">#DF6F3E</td><td class="sample" style="color:var(--mute-2);font-size:13px;">&nbsp;</td></tr>
+        <tr><td class="role-col">L8 · hottest</td><td class="px-col mono">0.82 0.14 40</td><td class="px-col mono">#ED9568</td><td class="sample" style="color:var(--mute-2);font-size:13px;">Map peak / extreme heat highlight</td></tr>
+      </tbody>
+    </table>
+
+    <!-- CVD simulation -->
+    <h2 style="margin: 56px 0 0;"><span class="label-num">·</span> &nbsp;·&nbsp; Colorblind-vision check</h2>
+    <p class="lead" style="margin: 14px 0 32px; max-width:none;">Simulated through standard CVD matrices &mdash; each row remains monotonically ordered.</p>
+
+    <div>
+      <div class="cvd">
+        <div class="name">Normal vision <em>trichromat</em></div>
+        <div class="cvd-bar normal"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="cvd">
+        <div class="name">Deuteranopia <em>~6% males</em></div>
+        <div class="cvd-bar normal deuter"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="cvd">
+        <div class="name">Protanopia <em>~1% males</em></div>
+        <div class="cvd-bar normal proto"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="cvd">
+        <div class="name">Tritanopia <em>rare</em></div>
+        <div class="cvd-bar normal trito"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="cvd">
+        <div class="name">Monochromatic <em>print + low-vision</em></div>
+        <div class="cvd-bar normal mono"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 06 IMAGERY ──────── -->
+<section>
+  <div class="container">
+    <div class="head">
+      <h2><span class="label-num">06</span> &nbsp;·&nbsp; Imagery</h2>
+      <div>
+        <h3>Bitmap dither. Halftone, never glossy.</h3>
+        <p class="lead">All hero and incidental imagery &mdash; satellite scenes, globes, supporting illustrations &mdash; passes through a 1-bit Atkinson or Floyd&ndash;Steinberg dither at ~3&nbsp;px per dot. The treatment ages well, prints well, and signals &ldquo;data&rdquo; without trying to look futuristic. Pin / interest dots may use the heat ramp at L6&ndash;L7 sparingly.</p>
+      </div>
+    </div>
+
+    <div class="imagery">
+      <div class="img-panel">
+        <div class="dither-globe">
+          <span class="pin pin-1"></span>
+          <span class="pin pin-2"></span>
+          <span class="pin pin-3"></span>
+        </div>
+        <span class="meta-sm">treatment · dark surface</span>
+      </div>
+      <div class="img-panel light">
+        <div class="dither-globe light">
+          <span class="pin pin-1"></span>
+          <span class="pin pin-2"></span>
+          <span class="pin pin-3"></span>
+        </div>
+        <span class="meta-sm" style="color:#8a8a85;">treatment · paper surface</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 07 VOICE ──────── -->
+<section>
+  <div class="container">
+    <div class="head">
+      <h2><span class="label-num">07</span> &nbsp;·&nbsp; Voice</h2>
+      <div>
+        <h3>Plain. Measured. Slightly literary.</h3>
+        <p class="lead">The product speaks like a careful scientist talking to a careful planner. It names the work, gives the number, cites the source, and stops. It avoids alarm, avoids salesmanship, and avoids the word <em>solution</em>.</p>
+      </div>
+    </div>
+
+    <div class="voice-grid">
+      <div>
+        <h4>Tone — yes</h4>
+        <ul>
+          <li><span class="y">do</span><span>State the measurement. <em style="color:var(--mute);font-style:normal;">&ldquo;Land surface temperature, P95, annual composite, 30&nbsp;m.&rdquo;</em></span></li>
+          <li><span class="y">do</span><span>Cite the source data inline. <em style="color:var(--mute);font-style:normal;">&ldquo;Built on Landsat Collection 2 via Source Cooperative.&rdquo;</em></span></li>
+          <li><span class="y">do</span><span>Use the active voice for the planner&rsquo;s action. <em style="color:var(--mute);font-style:normal;">&ldquo;Pick a ward. Read the heat.&rdquo;</em></span></li>
+          <li><span class="y">do</span><span>Let silence carry weight. Short sentences. White space.</span></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Tone — no</h4>
+        <ul>
+          <li><span class="n">no</span><span>Catastrophic framing. No &ldquo;deadly,&rdquo; &ldquo;unprecedented,&rdquo; or alarm-styled headlines.</span></li>
+          <li><span class="n">no</span><span>Startup verbs. No &ldquo;empower,&rdquo; &ldquo;unlock,&rdquo; &ldquo;leverage,&rdquo; &ldquo;democratize.&rdquo;</span></li>
+          <li><span class="n">no</span><span>AI / agent framing. The tool reads heat, it doesn&rsquo;t &ldquo;understand&rdquo; cities.</span></li>
+          <li><span class="n">no</span><span>Emoji, exclamation marks, or marketing exclamations.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <span class="meta">Sensable Heat · Brand Kit · v0.1 · 2026.05</span>
+  <span class="right">
+    <span class="meta">Built on IBM Plex</span>
+    <span class="meta">Heat ramp · OKLCH single-hue</span>
+  </span>
+</footer>
+
+</body>
+</html>
