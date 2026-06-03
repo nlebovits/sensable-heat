@@ -1,7 +1,7 @@
 // Map configuration
 
 export const MAP_CONFIG = {
-  GLOBE_ZOOM_THRESHOLD: 10,
+  GLOBE_ZOOM_THRESHOLD: 6,
   TRANSITION_DURATION: 700,
   MIN_ZOOM: 0,
   MAX_ZOOM: 20,

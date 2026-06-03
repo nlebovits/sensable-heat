@@ -13,6 +13,7 @@ import type { MapViewState, Layer } from "@deck.gl/core";
 import { FlyToInterpolator } from "@deck.gl/core";
 import { useMapStore } from "@/store/map-store";
 import { MAP_CONFIG, SOURCES, LAND_GEOJSON_URL, GRATICULE_GEOJSON_URL } from "@/lib/config";
+import { useLstLayer } from "@/hooks/useLstLayer";
 import { Legend } from "@/components/map-chrome/legend";
 import { ZoomStack } from "@/components/map-chrome/zoom-stack";
 import { Attribution } from "@/components/map-chrome/attribution";
@@ -38,6 +39,9 @@ export function MapContainer() {
   const [landData, setLandData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [graticuleData, setGraticuleData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  // LST Zarr layer - always visible (both globe and flat views)
+  const { layer: lstLayer, isLoading: lstLoading, error: lstError } = useLstLayer(true);
 
   // Register PMTiles protocol on mount
   useEffect(() => {
@@ -176,8 +180,13 @@ export function MapContainer() {
       );
     }
 
+    // LST layer on globe
+    if (lstLayer) {
+      layers.push(lstLayer);
+    }
+
     return layers;
-  }, [isGlobe, landData, graticuleData, theme]);
+  }, [isGlobe, landData, graticuleData, theme, lstLayer]);
 
   // Map layers (for flat view)
   const mapLayers = useMemo((): Layer[] => {
@@ -185,11 +194,13 @@ export function MapContainer() {
 
     const layers: Layer[] = [];
 
-    // TODO(v0.1): Add LST raster layer when COGs are available
-    // TODO(v0.1): Add admin boundaries layer when PMTiles are available
+    // LST Zarr layer
+    if (lstLayer) {
+      layers.push(lstLayer);
+    }
 
     return layers;
-  }, [isGlobe, showAdm]);
+  }, [isGlobe, lstLayer]);
 
   const layers = useMemo(() => {
     return [...globeLayers, ...mapLayers];
