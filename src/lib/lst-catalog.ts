@@ -1,9 +1,10 @@
 // STAC catalog access for the Landsat LST p95 collection.
 //
-// The collection publishes 104 items, one per 5-degree tile, each holding a
-// single-band uint16 COG. `items.parquet` is the collection's stac-geoparquet
-// mirror: one 133 KB request carries every item's bbox, asset hrefs and band
-// statistics, where crawling the item JSONs would cost 104 requests and 1.26 MB.
+// The collection publishes 769 items, one per 5-degree tile of land between
+// 60N and 60S, each holding a single-band uint16 COG. `items.parquet` is the
+// collection's stac-geoparquet mirror: one 674 KB request carries every item's
+// bbox, asset hrefs and band statistics, where crawling the item JSONs would
+// cost 769 requests and 8.9 MB.
 
 import { parquetReadObjects } from "hyparquet";
 import { LST } from "@/lib/config";
@@ -22,6 +23,14 @@ export interface LstItem {
   stddev: number;
   /** Pixels that survived masking, used to weight the pooled statistics. */
   validPixels: number;
+  /**
+   * Share of the item's raster that carries data, from 0 to 1.
+   *
+   * A 5-degree cell over a coastline holds a sliver of land and a great deal
+   * of ocean. The cell layer fades a cell by this, so the coarse view shows
+   * where the collection measured something rather than painting whole seas.
+   */
+  validFraction: number;
 }
 
 /** A temperature range in degrees Celsius. */
@@ -60,7 +69,7 @@ export function celsiusToDn(celsius: number): number {
  */
 export async function fetchLstItems(signal?: AbortSignal): Promise<LstItem[]> {
   // Read the file whole. Range-reading it column by column costs about 46
-  // round-trips, and the file is 133 KB, so one request is both fewer bytes
+  // round-trips, and the file is 674 KB, so one request is both fewer bytes
   // of overhead and faster.
   const response = await fetch(LST.ITEMS_PARQUET_URL, { signal });
   if (!response.ok) {
@@ -97,6 +106,7 @@ export async function fetchLstItems(signal?: AbortSignal): Promise<LstItem[]> {
       mean: stats.mean,
       stddev: stats.stddev,
       validPixels: Number(row["lst:valid_pixels"] ?? 0),
+      validFraction: (stats.valid_percent ?? 0) / 100,
     });
   }
 

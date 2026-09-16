@@ -11,9 +11,9 @@ import { GeoTIFF } from "@developmentseed/geotiff";
 /**
  * How many open COGs to keep.
  *
- * A city view holds a few dozen sources across both layers, and the whole LST
- * collection is 104. The cap stops a long panning session over the canopy
- * mosaic from pinning every header it has ever touched.
+ * A city view holds a few dozen sources across both layers, and the LST
+ * mosaic opens 63 at its widest affordable zoom. The cap stops a long panning
+ * session over either mosaic from pinning every header it has ever touched.
  */
 const MAX_OPEN = 256;
 

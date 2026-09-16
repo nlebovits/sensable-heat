@@ -4,19 +4,23 @@ export const MAP_CONFIG = {
   TRANSITION_DURATION: 700,
   MIN_ZOOM: 0,
   MAX_ZOOM: 20,
-  // Framed on South America, the only continent the LST collection covers.
+  // Framed on the whole collection, which now reaches every continent
+  // between 60 degrees north and 60 degrees south. The side panel takes the
+  // left of the window and the map takes the rest, so this zoom is set to fit
+  // 360 degrees into what is left rather than into the whole window.
   INITIAL_VIEW: {
-    latitude: -15,
-    longitude: -60,
-    zoom: 3.2,
+    latitude: 10,
+    longitude: 0,
+    zoom: 1,
     bearing: 0,
     pitch: 0,
   },
 };
 
 // Landsat land surface temperature, 95th percentile over 2021-2025.
-// A STAC collection of 104 single-band uint16 COGs on Source Cooperative,
-// one per 5-degree tile. See https://github.com/nlebovits/landsat-lst-smoke
+// A STAC collection of 769 single-band uint16 COGs on Source Cooperative,
+// one per 5-degree tile of land between 60N and 60S.
+// See https://github.com/nlebovits/landsat-lst-smoke
 export const LST = {
   COLLECTION_URL:
     "https://s3.us-west-2.amazonaws.com/us-west-2.opendata.source.coop/nlebovits/landsat-lst/lst-p95-2021-2025",
@@ -41,13 +45,29 @@ export const LST = {
    * Bytes each item COG reads to open itself.
    *
    * Every item is 18000 by 18000 over six overviews, so its IFD chain and all
-   * of its tile offset arrays end by byte 16268, and this covers them in one
+   * of its tile offset arrays end by byte 16264, and this covers them in one
    * request. `GeoTIFF.fromUrl` defaults to 64 KB, which reads four times what
-   * it uses. That default is affordable on one file and not on ninety-eight:
-   * the opening view holds most of the collection on screen, where it cost
-   * 6.27 MB of header against 3.71 MB of pixels.
+   * it uses. A view at {@link LST.MOSAIC_MIN_ZOOM} opens 63 items at once, so
+   * that default would cost 4 MB of header where this costs 1.5 MB.
    */
   HEADER_CHUNK_BYTES: 24 * 1024,
+
+  /**
+   * Zoom at which the per-item COGs take over from the cell layer.
+   *
+   * Every source in view opens its own COG, so the mosaic costs one request
+   * and 24 KB of header per item on screen. That is 63 items and 1.5 MB here,
+   * against 769 items and 18 MB at the opening view. S3 speaks HTTP/1.1, so
+   * the browser drains those over six sockets, and the whole collection at
+   * once takes upwards of fifteen seconds before a pixel lands.
+   *
+   * Below this zoom {@link CELL_SIDE_DEG} cells stand in, coloured from the
+   * per-item statistics that items.parquet already carries.
+   */
+  MOSAIC_MIN_ZOOM: 4,
+
+  /** Side of one item's footprint, in degrees. The cell layer draws these. */
+  CELL_SIDE_DEG: 5,
 
   /** Half-width of the display range, in standard deviations. */
   SIGMA: 2,
