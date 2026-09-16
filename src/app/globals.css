@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
+@source "../../node_modules/onborda/dist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -66,9 +67,9 @@
   /* ---- 9-step OKLCH heat ramp ---- */
   --h0: oklch(0.18 0.04 25);
   --h1: oklch(0.26 0.07 25);
-  --h2: oklch(0.34 0.10 27);
+  --h2: oklch(0.34 0.1 27);
   --h3: oklch(0.42 0.12 28);
-  --h4: oklch(0.50 0.14 30);
+  --h4: oklch(0.5 0.14 30);
   --h5: oklch(0.58 0.16 32);
   --h6: oklch(0.66 0.17 34);
   --h7: oklch(0.74 0.16 36);
@@ -436,6 +437,35 @@
   color: var(--mute-2);
 }
 
+/* Proof-of-concept notice. Sits between the masthead and Layers so it is the
+   first thing read after the tagline. */
+.panel-notice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 20px;
+  background: var(--surface-2);
+}
+
+.panel-notice .notice-icon {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.panel-notice p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--fg);
+}
+
+.resources-intro {
+  margin: 0 0 12px;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--mute-2);
+}
+
 .panel-block .label {
   font-family: var(--font-mono);
   font-size: var(--label-size);
@@ -586,7 +616,9 @@
   border-bottom: 1px solid var(--line);
 }
 
-.toggle-row:last-child {
+/* Scoped to direct children, because a layer group wraps a toggle and its
+   ramp, and the wrapped toggle must keep the divider. */
+.panel-block > .toggle-row:last-child {
   border-bottom: none;
 }
 
@@ -764,7 +796,176 @@
 .panel-footer .row {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   padding: 4px 0;
+}
+
+.panel-footer .row a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-align: right;
+}
+
+.panel-footer .row a:hover,
+.panel-footer .row .footer-link:hover {
+  color: var(--fg);
+}
+
+.panel-footer .row .footer-link {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Walkthrough tour (Onborda). The library ships Tailwind utilities, so the
+   card itself is styled here to match the panel in both themes. */
+
+/* Onborda wraps the app in two plain divs. Without a height they collapse the
+   full-height flex layout underneath them. */
+[data-name="onborda-wrapper"],
+[data-name="onborda-site"] {
+  height: 100%;
+}
+
+.tour-card {
+  position: relative;
+  width: min(360px, calc(100vw - 32px));
+  padding: 18px 20px 16px;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+.tour-card-eyebrow {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 12px;
+}
+
+.tour-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+.tour-card-body {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--mute-2);
+}
+
+.tour-card-body p {
+  margin: 0 0 10px;
+}
+
+.tour-card-body p:last-child {
+  margin-bottom: 0;
+}
+
+.tour-card-body a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.tour-card-body a:hover,
+.tour-card-body a:focus-visible {
+  color: var(--h6-hex);
+}
+
+/* The proof-of-concept note in step one. */
+.tour-card-body .tour-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  color: var(--fg);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.tour-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.tour-card-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.tour-card-skip,
+.tour-card-btn {
+  font-family: var(--font-mono);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+}
+
+.tour-card-skip {
+  padding: 0;
+  color: var(--mute);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.tour-card-skip:hover {
+  color: var(--fg);
+}
+
+.tour-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+}
+
+.tour-card-btn:hover {
+  border-color: var(--fg);
+}
+
+.tour-card-btn.primary {
+  color: var(--surface);
+  background: var(--fg);
+  border-color: var(--fg);
+}
+
+.tour-card-btn.primary:hover {
+  color: #fff;
+  background: var(--h6-hex);
+  border-color: var(--h6-hex);
+}
+
+/* Onborda positions the arrow itself. It only needs the card's colour. */
+.tour-card-arrow {
+  color: var(--surface);
 }
 
 /* Zoom stack */
@@ -982,7 +1183,9 @@
   gap: 2px;
   padding: 8px 12px;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .search-suggestions li:hover,
@@ -1216,6 +1419,39 @@
   }
 
   .topbar-meta {
+    display: none;
+  }
+}
+
+/*
+ * On mobile the side panel collapses to a short sheet, so its rows are not
+ * on screen and a spotlight on them teaches nothing. Onborda anchors the
+ * card to the spotlight, which puts the card outside the viewport. Drop the
+ * spotlight to a point and pin the card to the bottom of the screen. The
+ * dim still covers the page, because it comes from the spotlight shadow.
+ */
+@media (max-width: 768px) {
+  [data-name="onborda-pointer"] {
+    transform: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  [data-name="onborda-card"] {
+    position: fixed !important;
+    top: auto !important;
+    right: 16px !important;
+    bottom: 16px !important;
+    left: 16px !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  .tour-card {
+    width: auto;
+  }
+
+  .tour-card-arrow {
     display: none;
   }
 }

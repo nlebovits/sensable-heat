@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { SidePanel } from "@/components/side-panel";
 import { MapContainer } from "@/components/map";
+import { WalkthroughProvider } from "@/components/walkthrough";
 import { useMapStore } from "@/store/map-store";
 import { useUrlSync } from "@/hooks/useUrlSync";
 
@@ -31,7 +32,9 @@ export default function Home() {
   return (
     <Suspense fallback={null}>
       <UrlSyncProvider>
-        <AppContent />
+        <WalkthroughProvider>
+          <AppContent />
+        </WalkthroughProvider>
       </UrlSyncProvider>
     </Suspense>
   );

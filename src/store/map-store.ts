@@ -31,6 +31,8 @@ interface MapState {
   // UI
   theme: "dark" | "light";
   panelOpen: boolean;
+  /** True while the walkthrough dialog is open by explicit request. */
+  walkthroughOpen: boolean;
 
   // Actions
   setViewState: (viewState: Partial<Pick<MapState, "latitude" | "longitude" | "zoom" | "bearing" | "pitch">>) => void;
@@ -45,6 +47,7 @@ interface MapState {
   setTheme: (theme: "dark" | "light") => void;
   toggleTheme: () => void;
   setPanelOpen: (open: boolean) => void;
+  setWalkthroughOpen: (open: boolean) => void;
   flyTo: (lng: number, lat: number, zoom?: number) => void;
   setIsFlying: (isFlying: boolean) => void;
 }
@@ -76,6 +79,7 @@ export const useMapStore = create<MapState>()(
       // UI
       theme: "dark",
       panelOpen: true,
+      walkthroughOpen: false,
 
       // Actions
       setViewState: (viewState) => set((state) => ({ ...state, ...viewState })),
@@ -101,6 +105,8 @@ export const useMapStore = create<MapState>()(
       toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
 
       setPanelOpen: (panelOpen) => set({ panelOpen }),
+
+      setWalkthroughOpen: (walkthroughOpen) => set({ walkthroughOpen }),
 
       flyTo: (lng, lat, zoom = 12) =>
         set({

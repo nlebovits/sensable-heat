@@ -35,6 +35,7 @@ export function SidePanel() {
     setShowAdm,
     setShowBuildings,
     setShowSatellite,
+    setWalkthroughOpen,
   } = useMapStore();
 
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
@@ -65,7 +66,7 @@ export function SidePanel() {
       ></div>
       <div className="panel-inner">
         {/* Header */}
-        <div className="panel-block panel-header">
+        <div className="panel-block panel-header" data-tour="intro">
           <HeatRaster />
           <div className="mono-label">
             A{" "}
@@ -85,149 +86,172 @@ export function SidePanel() {
           </p>
         </div>
 
+        {/* Proof-of-concept notice */}
+        <div className="panel-block panel-notice" role="note">
+          <span className="notice-icon" aria-hidden="true">
+            🚧
+          </span>
+          <p>
+            This map is meant as a proof of concept. It should not be used for
+            decision-making purposes.
+          </p>
+        </div>
+
         {/* Layers */}
-        <div className="panel-block" role="group" aria-labelledby="layers-label">
-          <div className="label" id="layers-label">Layers</div>
-          <div className="toggle-row">
-            <span id="lst-label">
-              <span className="name">
-                <InfoTip
-                  content={
-                    <>
-                      The 95th percentile of every cloud-free Landsat 8/9
-                      thermal scene from 2021 through 2025. Data via the{" "}
-                      <a
-                        href="https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Landsat Collection 2 Level-2 archive
-                      </a>{" "}
-                      at the{" "}
-                      <a
-                        href="https://www.usgs.gov/landsat-missions"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        USGS
-                      </a>
-                      ,{" "}
-                      <a
-                        href="https://creativecommons.org/publicdomain/zero/1.0/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        CC0-1.0
-                      </a>
-                      ,{" "}
-                      <a
-                        href="https://github.com/nlebovits/landsat-lst-smoke"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        processed by Nissim Lebovits
-                      </a>
-                      .
-                    </>
-                  }
-                >
-                  Land surface temperature
-                </InfoTip>
-              </span>
-              <span className="sub">p95 · 2021–25 composite · 30m</span>
-            </span>
-            <button
-              className={`switch ${showLst ? "on" : ""}`}
-              role="switch"
-              aria-checked={showLst}
-              aria-labelledby="lst-label"
-              onClick={() => setShowLst(!showLst)}
-            />
+        <div
+          className="panel-block"
+          role="group"
+          aria-labelledby="layers-label"
+        >
+          <div className="label" id="layers-label">
+            Layers
           </div>
-          {showLst && (
-            <LayerRamp
-              stops={HEAT_RAMP}
-              min={lstRange ? `${Math.round(lstRange.minC)}°` : "—"}
-              max={lstRange ? `${Math.round(lstRange.maxC)}°` : "—"}
-              label={
-                lstRange
-                  ? `Temperature scale from ${Math.round(lstRange.minC)} to ${Math.round(lstRange.maxC)} degrees Celsius, recomputed from the tiles on screen.`
-                  : "Temperature scale, loading the range"
-              }
-            />
-          )}
-          <div className="toggle-row">
-            <span id="chm-label">
-              <span className="name">
-                <InfoTip
-                  content={
-                    <>
-                      <a
-                        href="https://arxiv.org/abs/2603.06382"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Meta DINOv3 canopy height v2
-                      </a>
-                      , in meters.{" "}
-                      <a
-                        href="https://creativecommons.org/licenses/by/4.0/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        CC-BY-4.0
-                      </a>{" "}
-                      via{" "}
-                      <a
-                        href="https://source.coop/tge-labs"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Taylor Geospatial Engine
-                      </a>{" "}
-                      on{" "}
-                      <a
-                        href="https://source.coop/tge-labs/meta-chm-v2"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Source Cooperative
-                      </a>
-                      .
-                    </>
-                  }
-                >
-                  Tree canopy height
-                </InfoTip>
+          {/* A toggle and the ramp under it read as one layer, so the tour
+              highlights the pair rather than the toggle alone. */}
+          <div className="layer-group" data-tour="lst">
+            <div className="toggle-row">
+              <span id="lst-label">
+                <span className="name">
+                  <InfoTip
+                    content={
+                      <>
+                        The 95th percentile of every cloud-free Landsat 8/9
+                        thermal scene from 2021 through 2025. Data via the{" "}
+                        <a
+                          href="https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Landsat Collection 2 Level-2 archive
+                        </a>{" "}
+                        at the{" "}
+                        <a
+                          href="https://www.usgs.gov/landsat-missions"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          USGS
+                        </a>
+                        ,{" "}
+                        <a
+                          href="https://creativecommons.org/publicdomain/zero/1.0/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          CC0-1.0
+                        </a>
+                        ,{" "}
+                        <a
+                          href="https://github.com/nlebovits/landsat-lst-smoke"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          processed by Nissim Lebovits
+                        </a>
+                        .
+                      </>
+                    }
+                  >
+                    Land surface temperature
+                  </InfoTip>
+                </span>
+                <span className="sub">p95 · 2021–25 composite · 30m</span>
               </span>
-              <span className="sub">
-                <a
-                  className="sub-link"
-                  href="https://source.coop/tge-labs/meta-chm-v2"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Meta CHM v2
-                </a>
-                {" · 1.19m"}
-              </span>
-            </span>
-            <button
-              className={`switch ${showChm ? "on" : ""}`}
-              role="switch"
-              aria-checked={showChm}
-              aria-labelledby="chm-label"
-              onClick={() => setShowChm(!showChm)}
-            />
+              <button
+                className={`switch ${showLst ? "on" : ""}`}
+                role="switch"
+                aria-checked={showLst}
+                aria-labelledby="lst-label"
+                onClick={() => setShowLst(!showLst)}
+              />
+            </div>
+            {showLst && (
+              <LayerRamp
+                stops={HEAT_RAMP}
+                min={lstRange ? `${Math.round(lstRange.minC)}°` : "—"}
+                max={lstRange ? `${Math.round(lstRange.maxC)}°` : "—"}
+                label={
+                  lstRange
+                    ? `Temperature scale from ${Math.round(lstRange.minC)} to ${Math.round(lstRange.maxC)} degrees Celsius, recomputed from the tiles on screen.`
+                    : "Temperature scale, loading the range"
+                }
+              />
+            )}
           </div>
-          {showChm && (
-            <LayerRamp
-              stops={CANOPY_RAMP}
-              min={`${CHM.MIN_METRES}m`}
-              max={`${CHM.MAX_METRES}m`}
-              label={`Tree canopy height scale from ${CHM.MIN_METRES} to ${CHM.MAX_METRES} metres. Ground with no canopy is transparent.`}
-            />
-          )}
+          <div className="layer-group" data-tour="canopy">
+            <div className="toggle-row">
+              <span id="chm-label">
+                <span className="name">
+                  <InfoTip
+                    content={
+                      <>
+                        <a
+                          href="https://arxiv.org/abs/2603.06382"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Meta DINOv3 canopy height v2
+                        </a>
+                        , in meters.{" "}
+                        <a
+                          href="https://creativecommons.org/licenses/by/4.0/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          CC-BY-4.0
+                        </a>{" "}
+                        via{" "}
+                        <a
+                          href="https://source.coop/tge-labs"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Taylor Geospatial Engine
+                        </a>{" "}
+                        on{" "}
+                        <a
+                          href="https://source.coop/tge-labs/meta-chm-v2"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Source Cooperative
+                        </a>
+                        .
+                      </>
+                    }
+                  >
+                    Tree canopy height
+                  </InfoTip>
+                </span>
+                <span className="sub">
+                  <a
+                    className="sub-link"
+                    href="https://source.coop/tge-labs/meta-chm-v2"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Meta CHM v2
+                  </a>
+                  {" · 1.19m"}
+                </span>
+              </span>
+              <button
+                className={`switch ${showChm ? "on" : ""}`}
+                role="switch"
+                aria-checked={showChm}
+                aria-labelledby="chm-label"
+                onClick={() => setShowChm(!showChm)}
+              />
+            </div>
+            {showChm && (
+              <LayerRamp
+                stops={CANOPY_RAMP}
+                min={`${CHM.MIN_METRES}m`}
+                max={`${CHM.MAX_METRES}m`}
+                label={`Tree canopy height scale from ${CHM.MIN_METRES} to ${CHM.MAX_METRES} metres. Ground with no canopy is transparent.`}
+              />
+            )}
+          </div>
           <div className="toggle-row">
             <span id="adm-label">
               <span className="name">Admin boundaries</span>
@@ -243,7 +267,7 @@ export function SidePanel() {
               onClick={() => setShowAdm(!showAdm)}
             />
           </div>
-          <div className="toggle-row">
+          <div className="toggle-row" data-tour="buildings">
             <span id="bld-label">
               <span className="name">Building footprints</span>
               <span className="sub">
@@ -274,8 +298,30 @@ export function SidePanel() {
         </div>
 
         {/* Resources */}
-        <div className="panel-block">
+        <div className="panel-block" data-tour="resources">
           <div className="label">Resources</div>
+          <p className="resources-intro">
+            All data are public and cloud-optimized for ease of use. Load them
+            in QGIS, Python, or other spatial analysis tools, or explore the
+            example notebook to see how to use them for city-scale heat risk
+            analyses.
+          </p>
+          <a
+            className="resource"
+            href="https://nlebovits.github.io/datos-escala-humana/en/en/cookbooks/pergamino.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <div className="name">
+                Example notebook: heat risk in Pergamino
+              </div>
+              <div className="source">Human Scale Data</div>
+            </div>
+            <span className="arrow">
+              <ArrowRight size={16} />
+            </span>
+          </a>
           <a
             className="resource"
             href="https://coolcities.wri.org/"
@@ -310,23 +356,48 @@ export function SidePanel() {
       {/* Footer, pinned below the scrolling region */}
       <div className="panel-footer">
         <div className="row">
-          <span>Data</span>
-          <span>Landsat C2 L2</span>
-        </div>
-        <div className="row">
-          <span>Hosted</span>
+          <span>Surface temp</span>
           <a
-            href="https://source.coop/"
+            href="https://source.coop/nlebovits/landsat-lst"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "inherit", textDecoration: "underline" }}
           >
-            Source Coop
+            Landsat LST · Source Coop
+          </a>
+        </div>
+        <div className="row">
+          <span>Canopy</span>
+          <a
+            href="https://source.coop/tge-labs/meta-chm-v2"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Meta CHM v2 · Source Coop
+          </a>
+        </div>
+        <div className="row">
+          <span>Buildings</span>
+          <a
+            href="https://overturemaps.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Overture Maps
           </a>
         </div>
         <div className="row">
           <span>Build</span>
           <span>v0.1 · 2026-05</span>
+        </div>
+        <div className="row">
+          <span>Help</span>
+          <button
+            type="button"
+            className="footer-link"
+            onClick={() => setWalkthroughOpen(true)}
+          >
+            Replay walkthrough
+          </button>
         </div>
       </div>
     </aside>
