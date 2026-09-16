@@ -2,11 +2,25 @@
 
 import { useState, useCallback } from "react";
 import { Wordmark } from "@/components/wordmark";
-import { ChevronDown, ArrowRight } from "@/components/icons";
+import { HeatRaster } from "@/components/heat-raster";
+import { ArrowRight } from "@/components/icons";
 import { InfoTip } from "@/components/ui/info-tip";
 import { LayerRamp } from "@/components/side-panel/layer-ramp";
 import { HEAT_RAMP, CANOPY_RAMP, CHM } from "@/lib/config";
 import { useMapStore } from "@/store/map-store";
+
+function OvertureLink() {
+  return (
+    <a
+      className="sub-link"
+      href="https://overturemaps.org/"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Overture Maps
+    </a>
+  );
+}
 
 export function SidePanel() {
   const {
@@ -14,7 +28,6 @@ export function SidePanel() {
     showChm,
     showAdm,
     lstRange,
-    admPath,
     showBuildings,
     showSatellite,
     setShowLst,
@@ -24,10 +37,6 @@ export function SidePanel() {
     setShowSatellite,
   } = useMapStore();
 
-  const lstScope =
-    admPath.length > 0 ? admPath[admPath.length - 1] : "viewport";
-
-  const [aboutOpen, setAboutOpen] = useState(true);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
   const toggleMobilePanel = useCallback(() => {
@@ -56,29 +65,23 @@ export function SidePanel() {
       ></div>
       <div className="panel-inner">
         {/* Header */}
-        <div className="panel-block" style={{ borderBottom: "none", paddingBottom: 8 }}>
-          <div className="mono-label" style={{ marginBottom: 12 }}>
+        <div className="panel-block panel-header">
+          <HeatRaster />
+          <div className="mono-label">
             A{" "}
             <a
               href="https://radiant.earth/"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "underline" }}
             >
               Radiant Earth
-            </a>
-            {" "}project
+            </a>{" "}
+            project
           </div>
-          <Wordmark size={20} />
-          <p
-            style={{
-              fontSize: "var(--text-sm)",
-              color: "var(--mute-2)",
-              lineHeight: 1.5,
-              marginTop: 14,
-            }}
-          >
-            A global, high-resolution map of land surface temperature, derived from Landsat 8/9.
+          <Wordmark size={28} />
+          <p className="tagline">
+            A global map of extreme land surface temperature, derived from
+            Landsat 8/9.
           </p>
         </div>
 
@@ -88,11 +91,48 @@ export function SidePanel() {
           <div className="toggle-row">
             <span id="lst-label">
               <span className="name">
-                Land surface temperature
                 <InfoTip
-                  label="The 95th percentile of every cloud-free Landsat 8 and 9 thermal scene from 2021 through 2025. Each pixel reads as a hot day rather than a typical one."
-                  side="right"
-                />
+                  content={
+                    <>
+                      The 95th percentile of every cloud-free Landsat 8/9
+                      thermal scene from 2021 through 2025. Data via the{" "}
+                      <a
+                        href="https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Landsat Collection 2 Level-2 archive
+                      </a>{" "}
+                      at the{" "}
+                      <a
+                        href="https://www.usgs.gov/landsat-missions"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        USGS
+                      </a>
+                      ,{" "}
+                      <a
+                        href="https://creativecommons.org/publicdomain/zero/1.0/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        CC0-1.0
+                      </a>
+                      ,{" "}
+                      <a
+                        href="https://github.com/nlebovits/landsat-lst-smoke"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        processed by Nissim Lebovits
+                      </a>
+                      .
+                    </>
+                  }
+                >
+                  Land surface temperature
+                </InfoTip>
               </span>
               <span className="sub">p95 · 2021–25 composite · 30m</span>
             </span>
@@ -109,7 +149,6 @@ export function SidePanel() {
               stops={HEAT_RAMP}
               min={lstRange ? `${Math.round(lstRange.minC)}°` : "—"}
               max={lstRange ? `${Math.round(lstRange.maxC)}°` : "—"}
-              note={`auto · ${lstScope}`}
               label={
                 lstRange
                   ? `Temperature scale from ${Math.round(lstRange.minC)} to ${Math.round(lstRange.maxC)} degrees Celsius, recomputed from the tiles on screen.`
@@ -120,13 +159,58 @@ export function SidePanel() {
           <div className="toggle-row">
             <span id="chm-label">
               <span className="name">
-                Canopy height
                 <InfoTip
-                  label="Meta DINOv3 canopy height v2, in metres, at 1.19 m. Zero-height ground is transparent, so this draws only where something is growing and the temperature below shows through."
-                  side="right"
-                />
+                  content={
+                    <>
+                      <a
+                        href="https://arxiv.org/abs/2603.06382"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Meta DINOv3 canopy height v2
+                      </a>
+                      , in meters.{" "}
+                      <a
+                        href="https://creativecommons.org/licenses/by/4.0/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        CC-BY-4.0
+                      </a>{" "}
+                      via{" "}
+                      <a
+                        href="https://source.coop/tge-labs"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Taylor Geospatial Engine
+                      </a>{" "}
+                      on{" "}
+                      <a
+                        href="https://source.coop/tge-labs/meta-chm-v2"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Source Cooperative
+                      </a>
+                      .
+                    </>
+                  }
+                >
+                  Tree canopy height
+                </InfoTip>
               </span>
-              <span className="sub">Meta CHM v2 · 1.19m</span>
+              <span className="sub">
+                <a
+                  className="sub-link"
+                  href="https://source.coop/tge-labs/meta-chm-v2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Meta CHM v2
+                </a>
+                {" · 1.19m"}
+              </span>
             </span>
             <button
               className={`switch ${showChm ? "on" : ""}`}
@@ -141,19 +225,15 @@ export function SidePanel() {
               stops={CANOPY_RAMP}
               min={`${CHM.MIN_METRES}m`}
               max={`${CHM.MAX_METRES}m`}
-              label={`Canopy height scale from ${CHM.MIN_METRES} to ${CHM.MAX_METRES} metres. Ground with no canopy is transparent.`}
+              label={`Tree canopy height scale from ${CHM.MIN_METRES} to ${CHM.MAX_METRES} metres. Ground with no canopy is transparent.`}
             />
           )}
           <div className="toggle-row">
             <span id="adm-label">
-              <span className="name">
-                Admin boundaries
-                <InfoTip
-                  label="Overture Maps division boundaries, release 2026-08-19.0. Countries, regions, and counties down to zoom 12."
-                  side="right"
-                />
+              <span className="name">Admin boundaries</span>
+              <span className="sub">
+                <OvertureLink />
               </span>
-              <span className="sub">Overture Maps · divisions</span>
             </span>
             <button
               className={`switch ${showAdm ? "on" : ""}`}
@@ -165,14 +245,10 @@ export function SidePanel() {
           </div>
           <div className="toggle-row">
             <span id="bld-label">
-              <span className="name">
-                Building footprints
-                <InfoTip
-                  label="Overture Maps building footprints, release 2026-08-19.0. Drawn as white outlines from zoom 11, so the surface temperature still reads through each roof."
-                  side="right"
-                />
+              <span className="name">Building footprints</span>
+              <span className="sub">
+                <OvertureLink />
               </span>
-              <span className="sub">Overture Maps · buildings · zoom 11+</span>
             </span>
             <button
               className={`switch ${showBuildings ? "on" : ""}`}
@@ -185,7 +261,7 @@ export function SidePanel() {
           <div className="toggle-row">
             <span id="sat-label">
               <span className="name">Satellite imagery</span>
-              <span className="sub">Esri · cloud-free</span>
+              <span className="sub">Esri</span>
             </span>
             <button
               className={`switch ${showSatellite ? "on" : ""}`}
@@ -196,32 +272,6 @@ export function SidePanel() {
             />
           </div>
         </div>
-
-        {/* About */}
-        <details className="disclose" open={aboutOpen} onToggle={(e) => setAboutOpen(e.currentTarget.open)}>
-          <summary>
-            About this measurement
-            <ChevronDown size={16} />
-          </summary>
-          <div className="body">
-            <p>
-              Land surface temperature (LST) is the temperature of the ground
-              itself — pavement, rooftops, soil — not the air above it. It
-              reaches the body through radiation, contact, and the absence of
-              shade.
-            </p>
-            <p>
-              This map composites every cloud-free Landsat 8 and 9 thermal scene
-              from 2021 through 2025 at 30m resolution. It shows the 95th
-              percentile, so each pixel reads as a hot day rather than a typical
-              one. Coverage spans South America.
-            </p>
-            <p>
-              The colour range is the mean of the tiles on screen, plus or minus
-              two standard deviations. It follows the map as you pan.
-            </p>
-          </div>
-        </details>
 
         {/* Resources */}
         <div className="panel-block">
@@ -255,7 +305,6 @@ export function SidePanel() {
             </span>
           </a>
         </div>
-
       </div>
 
       {/* Footer, pinned below the scrolling region */}

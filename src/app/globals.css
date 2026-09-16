@@ -103,6 +103,8 @@
   --topbar-h: 48px;
   --panel-w: 380px;
   --switch-size: 18px;
+  /* Colour ramps read as a key, not a bar, so they run short of the column */
+  --ramp-w: 75%;
   --radius: 0px;
 
   /* ---- Motion ---- */
@@ -176,14 +178,14 @@
 .sens-target {
   position: relative;
   display: inline-block;
-  padding: 5px 10px;
-  margin: 0 4px 0 0;
+  padding: 0.25em 0.5em;
+  margin: 0 0.2em 0 0;
 }
 
 .vf-corner {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 0.5em;
+  height: 0.5em;
   border-color: currentColor;
   border-style: solid;
   border-width: 0;
@@ -192,26 +194,26 @@
 .vf-corner.tl {
   top: 0;
   left: 0;
-  border-top-width: 3px;
-  border-left-width: 3px;
+  border-top-width: 0.15em;
+  border-left-width: 0.15em;
 }
 .vf-corner.tr {
   top: 0;
   right: 0;
-  border-top-width: 3px;
-  border-right-width: 3px;
+  border-top-width: 0.15em;
+  border-right-width: 0.15em;
 }
 .vf-corner.bl {
   bottom: 0;
   left: 0;
-  border-bottom-width: 3px;
-  border-left-width: 3px;
+  border-bottom-width: 0.15em;
+  border-left-width: 0.15em;
 }
 .vf-corner.br {
   bottom: 0;
   right: 0;
-  border-bottom-width: 3px;
-  border-right-width: 3px;
+  border-bottom-width: 0.15em;
+  border-right-width: 0.15em;
 }
 
 /* ============================================================
@@ -289,12 +291,17 @@
 }
 
 /* Colour scale under a layer toggle.
-   Stops short of the switch above it, so the ramp reads as part of the text
-   column rather than running under the control. */
+   The ramp and its labels run to --ramp-w, so the scale reads as a key rather
+   than a bar. The rule below stays full width, because it divides layer rows. */
 .layer-ramp {
-  padding: 0 calc(var(--switch-size) + 12px) 12px 0;
+  padding: 0 0 12px 0;
   margin-top: -2px;
   border-bottom: 1px solid var(--line);
+}
+
+.layer-ramp .legend-bar,
+.layer-ramp .layer-ramp-axis {
+  width: var(--ramp-w);
 }
 
 .layer-ramp-axis {
@@ -307,12 +314,6 @@
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--mute);
-}
-
-.layer-ramp-axis .note {
-  text-transform: uppercase;
-  letter-spacing: var(--label-tracking);
-  color: var(--h7-hex);
 }
 
 /* A toggle and the ramp below it read as one unit */
@@ -369,6 +370,70 @@
 .panel-block {
   padding: 16px 20px;
   border-bottom: 1px solid var(--line);
+}
+
+/* Panel masthead. The mark and the tagline are one lockup, held at 18px. The
+   eyebrow sits apart above it at 24px, and Layers breaks away below at 32px. */
+.panel-header {
+  padding: 20px 20px 16px;
+  border-bottom: none;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Glyph raster behind the masthead. Decoration only, so it stays well under
+   the type and fades out before it reaches the tagline. */
+/* The ramp is light, so it carries against the dark panel well below full
+   strength. Opacity is the knob for how far forward the map sits. */
+.heat-raster {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.45;
+  /* Fades out before it reaches the tagline, so the map never competes with
+     the type it sits behind. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.55) 55%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.55) 55%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.heat-raster pre {
+  margin: 0;
+}
+
+/* The raster is built for the dark panel. On white it needs to sit back. */
+.light .heat-raster {
+  opacity: 0.75;
+}
+
+.panel-header .mono-label {
+  display: block;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.panel-header .mono-label a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.panel-header .tagline {
+  margin: 18px 0 0;
+  font-size: var(--text-base);
+  line-height: 1.55;
+  color: var(--mute-2);
 }
 
 .panel-block .label {
@@ -539,37 +604,58 @@
   margin-top: 2px;
 }
 
-/* Info tooltip */
-.info-tip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: -2px;
-  margin-left: 6px;
-  padding: 0;
-  background: none;
-  border: none;
-  color: var(--mute);
+.toggle-row .sub-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s var(--ease-out);
+}
+
+.toggle-row .sub-link:hover,
+.toggle-row .sub-link:focus-visible {
+  color: var(--fg);
+}
+
+/* Hover explanation on a layer name. No icon, the text itself is the trigger. */
+.info-trigger {
   cursor: help;
   transition: color 0.15s var(--ease-out);
 }
 
-.info-tip:hover,
-.info-tip:focus-visible {
-  color: var(--fg);
+.info-trigger:hover,
+.info-trigger:focus-visible {
+  color: var(--h6-hex);
+}
+
+/* Sits above the panel and the map chrome, so the popup never lands behind a
+   layer row below it. */
+.info-tip-positioner {
+  z-index: 200;
 }
 
 .info-tip-popup {
-  max-width: 260px;
-  padding: 8px 10px;
+  max-width: 280px;
+  padding: 10px 12px;
   font-size: var(--text-xs);
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--fg);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  z-index: 60;
+  cursor: default;
+}
+
+.info-tip-popup a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s var(--ease-out);
+}
+
+.info-tip-popup a:hover,
+.info-tip-popup a:focus-visible {
+  color: var(--h6-hex);
 }
 
 /* Switch toggle — square indicator */
@@ -734,18 +820,16 @@
   height: 16px;
 }
 
-/* Attribution */
+/* Attribution, an info button that extends its source list leftward */
 .attribution {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--mute);
-  background: color-mix(in oklch, var(--surface) 80%, transparent);
-  padding: 6px 10px;
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   position: relative;
+  overflow: hidden;
 }
 
 .attribution::before {
@@ -755,10 +839,98 @@
   background-image: var(--dither);
   background-repeat: repeat;
   pointer-events: none;
+  z-index: 1;
 }
 
 .light .attribution::before {
   background-image: var(--dither-dark);
+}
+
+/* Collapses to zero width, so the control is a 36px square at rest */
+.attribution-reveal {
+  display: grid;
+  grid-template-columns: 0fr;
+  transition: grid-template-columns 0.2s var(--ease-out);
+}
+
+.attribution.open .attribution-reveal {
+  grid-template-columns: 1fr;
+}
+
+/* Carries no padding of its own, so the 0fr track collapses to zero width */
+.attribution-clip {
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  visibility: hidden;
+  transition: visibility 0s 0.2s;
+}
+
+.attribution.open .attribution-clip {
+  visibility: visible;
+  transition: visibility 0s;
+}
+
+.attribution-list {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  margin: 0;
+  padding: 0 14px;
+  list-style: none;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.attribution-list a {
+  color: var(--mute);
+  text-decoration: none;
+  transition: color 0.15s var(--ease-out);
+}
+
+.attribution-list a:hover,
+.attribution-list a:focus-visible {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.attribution-toggle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-left: 1px solid transparent;
+  color: var(--mute);
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+}
+
+.attribution.open .attribution-toggle {
+  border-left-color: var(--line);
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+.attribution-toggle:hover {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attribution-reveal,
+  .attribution-clip,
+  .attribution-toggle {
+    transition: none;
+  }
 }
 
 /* Floating search, top-left map chrome */
@@ -887,6 +1059,18 @@
 
 .disclose .body p:last-child {
   margin-bottom: 0;
+}
+
+.disclose .body a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s var(--ease-out);
+}
+
+.disclose .body a:hover,
+.disclose .body a:focus-visible {
+  color: var(--h6-hex);
 }
 
 /* Icon button */

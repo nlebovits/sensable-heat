@@ -1,31 +1,42 @@
 "use client";
 
 import { Tooltip } from "@base-ui/react/tooltip";
-import { Info } from "@/components/icons";
 
 interface InfoTipProps {
-  /** Tooltip body. Also the accessible name of the trigger. */
-  label: string;
-  /** Which side of the icon the popup prefers. */
+  /** Tooltip body. May contain links. */
+  content: React.ReactNode;
+  /** The text that reveals the tooltip on hover or focus. */
+  children: React.ReactNode;
+  /** Which side of the text the popup prefers. */
   side?: "top" | "right" | "bottom" | "left";
 }
 
 /**
- * An info icon that reveals a short explanation on hover or focus.
+ * Reveals an explanation when the pointer rests on the text it wraps.
  *
- * `Tooltip.Trigger` renders a `button`, so the popup opens from the keyboard
- * as well as the pointer.
+ * The trigger renders as a `span` rather than the default `button`, so the
+ * layer name keeps its own type. `tabIndex` keeps it reachable from the
+ * keyboard. The popup stays open while the pointer is inside it, which is what
+ * makes the links in the body clickable.
  */
-export function InfoTip({ label, side = "top" }: InfoTipProps) {
+export function InfoTip({ content, children, side = "right" }: InfoTipProps) {
   return (
-    <Tooltip.Provider delay={200} closeDelay={80}>
+    <Tooltip.Provider delay={150} closeDelay={250}>
       <Tooltip.Root>
-        <Tooltip.Trigger className="info-tip" aria-label={label}>
-          <Info size={14} aria-hidden="true" />
+        <Tooltip.Trigger
+          render={<span />}
+          className="info-trigger"
+          tabIndex={0}
+        >
+          {children}
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Positioner side={side} sideOffset={8}>
-            <Tooltip.Popup className="info-tip-popup">{label}</Tooltip.Popup>
+          <Tooltip.Positioner
+            className="info-tip-positioner"
+            side={side}
+            sideOffset={10}
+          >
+            <Tooltip.Popup className="info-tip-popup">{content}</Tooltip.Popup>
           </Tooltip.Positioner>
         </Tooltip.Portal>
       </Tooltip.Root>
