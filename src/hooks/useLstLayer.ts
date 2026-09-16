@@ -1,175 +1,128 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { ZarrLayer } from "@developmentseed/deck.gl-zarr";
-import type { GetTileDataOptions } from "@developmentseed/deck.gl-zarr";
-import * as zarr from "zarrita";
-import { HEAT_RAMP } from "@/lib/config";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { COGLayer, MosaicLayer } from "@developmentseed/deck.gl-geotiff";
+import type { Layer } from "@deck.gl/core";
 
-// Source Cooperative S3 bucket - path-style URL
-const LST_ZARR_URL =
-  "https://s3.us-west-2.amazonaws.com/us-west-2.opendata.source.coop/nlebovits/landsat-lst/2024/N40W075.zarr";
+import { LST } from "@/lib/config";
+import {
+  celsiusToDn,
+  fetchLstItems,
+  pooledRange,
+  type CelsiusRange,
+  type LstItem,
+} from "@/lib/lst-catalog";
+import {
+  makeGetTileData,
+  makeRenderTile,
+  type RasterTileData,
+} from "@/lib/raster-pipeline";
+import { useMapStore } from "@/store/map-store";
 
-// LST encoding: celsius = dn * scale_factor + add_offset
-const LST_SCALE_FACTOR = 0.01;
-const LST_ADD_OFFSET = -50.0;
+const getTileData = makeGetTileData("heat");
 
-// Temperature range for colormap (Celsius)
-const MIN_CELSIUS = 15;
-const MAX_CELSIUS = 45;
-const CELSIUS_RANGE = MAX_CELSIUS - MIN_CELSIUS;
-
-// Parse hex colors to RGB arrays
-function hexToRgb(hex: string): [number, number, number] {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return [0, 0, 0];
-  return [
-    parseInt(result[1], 16),
-    parseInt(result[2], 16),
-    parseInt(result[3], 16),
-  ];
+/** True when the two ranges differ by enough to be worth a redraw. */
+function rangeMoved(a: CelsiusRange, b: CelsiusRange): boolean {
+  return (
+    Math.abs(a.minC - b.minC) > LST.RANGE_EPSILON_C ||
+    Math.abs(a.maxC - b.maxC) > LST.RANGE_EPSILON_C
+  );
 }
 
-// Build a 256-entry lookup table from the heat ramp
-const HEAT_LUT = (() => {
-  const colors = HEAT_RAMP.map(hexToRgb);
-  const lut = new Uint8Array(256 * 4);
-
-  for (let i = 0; i < 256; i++) {
-    const t = i / 255;
-    const pos = t * (colors.length - 1);
-    const idx = Math.floor(pos);
-    const frac = pos - idx;
-
-    const c0 = colors[Math.min(idx, colors.length - 1)];
-    const c1 = colors[Math.min(idx + 1, colors.length - 1)];
-
-    lut[i * 4 + 0] = Math.round(c0[0] + frac * (c1[0] - c0[0]));
-    lut[i * 4 + 1] = Math.round(c0[1] + frac * (c1[1] - c0[1]));
-    lut[i * 4 + 2] = Math.round(c0[2] + frac * (c1[2] - c0[2]));
-    lut[i * 4 + 3] = 255;
-  }
-
-  return lut;
-})();
-
-interface LstTileData {
-  data: Uint16Array;
-  width: number;
-  height: number;
-}
-
+/**
+ * Render the Landsat LST collection as a mosaic of Cloud-Optimized GeoTIFFs.
+ *
+ * `MosaicLayer` holds every item in a Flatbush index and calls `renderSource`
+ * only for the tiles the viewport covers, so a zoomed-in map opens a handful of
+ * COGs rather than all 104.
+ *
+ * The color range is mean +/- 2 sigma over the tiles on screen, recomputed as
+ * they settle. It is seeded with the collection-wide range so the first paint
+ * is already correct.
+ */
 export function useLstLayer(visible: boolean = true) {
-  const [zarrArray, setZarrArray] = useState<zarr.Array<zarr.Uint16, zarr.FetchStore> | null>(null);
+  const [items, setItems] = useState<LstItem[]>([]);
+  const [range, setRange] = useState<CelsiusRange | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const setLstRange = useMapStore((s) => s.setLstRange);
 
-    async function openStore() {
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function load() {
       try {
         setIsLoading(true);
-        const store = new zarr.FetchStore(LST_ZARR_URL);
-        // Open lst_p95 array directly as v3 (bypasses deck.gl-zarr's internal v2-first detection)
-        const root = zarr.root(store);
-        const arr = await zarr.open.v3(root.resolve("lst_p95"), { kind: "array" });
-        if (!cancelled) {
-          setZarrArray(arr as zarr.Array<zarr.Uint16, zarr.FetchStore>);
-          setError(null);
-        }
+        const loaded = await fetchLstItems(controller.signal);
+        if (controller.signal.aborted) return;
+
+        setItems(loaded);
+        setRange(pooledRange(loaded));
+        setError(null);
       } catch (err) {
-        console.error("[LST] Failed to open Zarr array:", err);
-        if (!cancelled) {
-          setError(err instanceof Error ? err : new Error(String(err)));
-        }
+        if (controller.signal.aborted) return;
+        console.error("[LST] Failed to read the collection item mirror:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
-    openStore();
-    return () => {
-      cancelled = true;
-    };
+    load();
+    return () => controller.abort();
   }, []);
 
-  const layer = useMemo(() => {
-    if (!zarrArray || !visible) return null;
+  // Publish the active range so the legend can label its ramp.
+  useEffect(() => {
+    setLstRange(range);
+  }, [range, setLstRange]);
 
-    // GeoZarr metadata — icechunk doesn't write these conventions yet
-    // Shape: [18000, 18001] from zarr.json
-    // GDAL GeoTransform: "-75.00004444 0.00027778 0.0 40.00004222 0.0 -0.00027778"
-    //   = [x_origin, x_res, x_rot, y_origin, y_rot, y_res]
-    // GeoZarr spatial:transform uses Affine order: [a, b, c, d, e, f]
-    //   = [x_res, x_rot, x_origin, y_rot, y_res, y_origin]
-    const geoZarrMetadata = {
-      "spatial:dimensions": ["latitude", "longitude"],
-      "spatial:transform": [0.00027778, 0.0, -75.00004444, 0.0, -0.00027778, 40.00004222] as [number, number, number, number, number, number],
-      "spatial:shape": [18000, 18001] as [number, number],
-      "proj:code": "EPSG:4326",
-    };
+  // Narrow the range to the tiles on screen. The redraw this causes can fire
+  // another load event, so only a move past the epsilon counts as a change.
+  const onViewportLoad = useCallback(
+    (entries: { source: LstItem }[]) => {
+      const visibleItems = entries.map((entry) => entry.source);
+      const next = pooledRange(visibleItems);
+      if (!next) return;
 
-    return new ZarrLayer<zarr.FetchStore, zarr.Uint16, LstTileData>({
-      id: "lst-layer",
-      node: zarrArray,
-      metadata: geoZarrMetadata,
-      selection: {},
+      setRange((current) =>
+        current && !rangeMoved(current, next) ? current : next
+      );
+    },
+    []
+  );
 
-      async getTileData(
-        arr: zarr.Array<zarr.Uint16, zarr.FetchStore>,
-        options: GetTileDataOptions
-      ): Promise<LstTileData> {
-        try {
-          const chunk = await zarr.get(arr, options.sliceSpec);
-          return {
-            data: chunk.data as Uint16Array,
-            width: options.width,
-            height: options.height,
-          };
-        } catch (err) {
-          console.error("[LST] Tile fetch failed", { x: options.x, y: options.y, z: options.z, err });
-          throw err;
-        }
-      },
+  const layer = useMemo((): Layer | null => {
+    // Build nothing while hidden. deck.gl's TileLayer does not consult
+    // `visible` before fetching, so a hidden layer would still pull every
+    // tile in view.
+    if (!visible || items.length === 0 || !range) return null;
 
-      renderTile(tileData: LstTileData) {
-        const { data, width, height } = tileData;
-        const pixels = new Uint8ClampedArray(width * height * 4);
-
-        for (let i = 0; i < data.length; i++) {
-          const dn = data[i];
-
-          // nodata = 0
-          if (dn === 0) {
-            pixels[i * 4 + 3] = 0;
-            continue;
-          }
-
-          // Decode to Celsius
-          const celsius = dn * LST_SCALE_FACTOR + LST_ADD_OFFSET;
-
-          // Normalize to 0-255 for colormap lookup
-          const normalized = Math.max(
-            0,
-            Math.min(255, ((celsius - MIN_CELSIUS) / CELSIUS_RANGE) * 255)
-          );
-          const idx = Math.floor(normalized);
-
-          pixels[i * 4 + 0] = HEAT_LUT[idx * 4 + 0];
-          pixels[i * 4 + 1] = HEAT_LUT[idx * 4 + 1];
-          pixels[i * 4 + 2] = HEAT_LUT[idx * 4 + 2];
-          pixels[i * 4 + 3] = HEAT_LUT[idx * 4 + 3];
-        }
-
-        return {
-          image: new ImageData(pixels, width, height),
-        };
-      },
+    const renderTile = makeRenderTile({
+      minDn: celsiusToDn(range.minC),
+      maxDn: celsiusToDn(range.maxC),
+      nodataDn: LST.NODATA_DN,
     });
-  }, [zarrArray, visible]);
+    const rescaleKey = `${range.minC}:${range.maxC}`;
+
+    return new MosaicLayer<LstItem>({
+      id: "lst-mosaic",
+      sources: items,
+      onViewportLoad,
+      renderSource: (source, { signal }) =>
+        new COGLayer<RasterTileData>({
+          id: `lst-cog-${source.id}`,
+          geotiff: source.cogUrl,
+          signal,
+          getTileData,
+          renderTile,
+          // Without this the inner RasterTileLayer keeps the sub-layers it
+          // already rendered, and the ramp never follows the range.
+          updateTriggers: { renderTile: [rescaleKey] },
+        }),
+    });
+  }, [items, range, visible, onViewportLoad]);
 
   return { layer, isLoading, error };
 }

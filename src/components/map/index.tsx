@@ -1,24 +1,55 @@
 "use client";
 
-import { useCallback, useState, useEffect, useMemo } from "react";
-import { Map as ReactMapGL } from "react-map-gl/maplibre";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
+import {
+  Map as ReactMapGL,
+  useControl,
+  type MapRef,
+  type ViewStateChangeEvent,
+} from "react-map-gl/maplibre";
 import { addProtocol, removeProtocol } from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
-import DeckGL from "@deck.gl/react";
-import { MapView, _GlobeView as GlobeView } from "@deck.gl/core";
-import { GeoJsonLayer } from "@deck.gl/layers";
-import type { MapViewState, Layer } from "@deck.gl/core";
+import { MapboxOverlay } from "@deck.gl/mapbox";
+import type { Layer, LayerProps } from "@deck.gl/core";
 
-import { FlyToInterpolator } from "@deck.gl/core";
+import { useSearchParams } from "next/navigation";
 import { useMapStore } from "@/store/map-store";
-import { MAP_CONFIG, SOURCES, LAND_GEOJSON_URL, GRATICULE_GEOJSON_URL } from "@/lib/config";
+import { cameraFromUrl } from "@/hooks/useUrlSync";
+import { MAP_CONFIG, SOURCES, BUILDINGS_MIN_ZOOM } from "@/lib/config";
 import { useLstLayer } from "@/hooks/useLstLayer";
-import { Legend } from "@/components/map-chrome/legend";
+import { useChmLayer } from "@/hooks/useChmLayer";
+import { Search } from "@/components/map-chrome/search";
 import { ZoomStack } from "@/components/map-chrome/zoom-stack";
 import { Attribution } from "@/components/map-chrome/attribution";
 
-const { GLOBE_ZOOM_THRESHOLD } = MAP_CONFIG;
+/**
+ * MapLibre layer the interleaved raster is inserted before. Every style layer
+ * declared from here on draws above the temperature data.
+ */
+const OVERLAY_ANCHOR_LAYER = "roads";
+
+/**
+ * How far the store camera may sit from MapLibre's own before the map is moved
+ * to match. The two round-trip through `onMove`, so they never agree exactly.
+ */
+const CAMERA_EPSILON_DEG = 1e-6;
+const CAMERA_EPSILON_ZOOM = 1e-3;
+
+/**
+ * Mounts deck.gl inside MapLibre's own GL context.
+ *
+ * `interleaved` is what makes the Overture vector layers legible: the deck
+ * layers are inserted into MapLibre's layer stack rather than painted over the
+ * whole map, so anything MapLibre draws after them sits on top of the raster.
+ */
+function DeckOverlay({ layers }: { layers: Layer[] }) {
+  const overlay = useControl(
+    () => new MapboxOverlay({ interleaved: true, layers })
+  );
+  overlay.setProps({ layers });
+  return null;
+}
 
 export function MapContainer() {
   const {
@@ -28,20 +59,33 @@ export function MapContainer() {
     bearing,
     pitch,
     theme,
+    showLst,
+    showChm,
     showAdm,
+    showBuildings,
     showSatellite,
     isFlying,
     setViewState,
     setIsFlying,
   } = useMapStore();
 
-  const [isGlobe, setIsGlobe] = useState(zoom < GLOBE_ZOOM_THRESHOLD);
-  const [landData, setLandData] = useState<GeoJSON.FeatureCollection | null>(null);
-  const [graticuleData, setGraticuleData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const mapRef = useRef<MapRef>(null);
 
-  // LST Zarr layer - always visible (both globe and flat views)
-  const { layer: lstLayer, isLoading: lstLoading, error: lstError } = useLstLayer(true);
+  // Frame the map from the URL on the first render. useUrlSync writes the same
+  // values to the store, but only in an effect, and by then the raster would
+  // already have loaded every tile of the default view.
+  const searchParams = useSearchParams();
+  const [initialCamera] = useState(() =>
+    cameraFromUrl(searchParams, { latitude, longitude, zoom })
+  );
+
+  // LST COG mosaic, drawn over the MapLibre basemap
+  const { layer: lstLayer, error: lstError } = useLstLayer(showLst);
+
+  // Canopy height, drawn over the temperature. Its zero-height pixels are
+  // transparent, so the heat ramp shows through every paved and bare surface.
+  const { layers: chmLayers, error: chmError } = useChmLayer(showChm);
 
   // Register PMTiles protocol on mount
   useEffect(() => {
@@ -53,78 +97,66 @@ export function MapContainer() {
     };
   }, []);
 
-  // Load land and graticule data for globe view
-  useEffect(() => {
-    fetch(LAND_GEOJSON_URL)
-      .then((r) => r.json())
-      .then(setLandData)
-      .catch(console.error);
-
-    fetch(GRATICULE_GEOJSON_URL)
-      .then((r) => r.json())
-      .then(setGraticuleData)
-      .catch(console.error);
-  }, []);
-
-  const viewState = useMemo(() => {
-    const base = { latitude, longitude, zoom, bearing, pitch };
-    if (isFlying) {
-      return {
-        ...base,
-        transitionDuration: MAP_CONFIG.TRANSITION_DURATION,
-        transitionInterpolator: new FlyToInterpolator(),
-      };
-    }
-    return base;
-  }, [latitude, longitude, zoom, bearing, pitch, isFlying]);
-
-  // Track globe/map mode based on zoom
-  useEffect(() => {
-    const shouldBeGlobe = zoom < GLOBE_ZOOM_THRESHOLD;
-    if (shouldBeGlobe !== isGlobe) {
-      setIsGlobe(shouldBeGlobe);
-    }
-  }, [zoom, isGlobe]);
-
-  const onViewStateChange = useCallback(
-    ({
-      viewState: newViewState,
-      interactionState,
-    }: {
-      viewState: MapViewState;
-      interactionState?: { inTransition?: boolean };
-    }) => {
-      setViewState({
-        latitude: newViewState.latitude,
-        longitude: newViewState.longitude,
-        zoom: newViewState.zoom,
-        bearing: newViewState.bearing || 0,
-        pitch: newViewState.pitch || 0,
-      });
-
-      if (isFlying && interactionState && !interactionState.inTransition) {
-        setIsFlying(false);
-      }
+  // Write the camera back to the store as the user drags and zooms.
+  const onMove = useCallback(
+    (e: ViewStateChangeEvent) => {
+      const { latitude, longitude, zoom, bearing, pitch } = e.viewState;
+      setViewState({ latitude, longitude, zoom, bearing, pitch });
     },
-    [setViewState, isFlying, setIsFlying]
+    [setViewState]
   );
 
+  // A store-driven flight, from the place search. MapLibre animates it, so it
+  // runs once per request rather than on every camera write.
+  useEffect(() => {
+    if (!isFlying) return;
+
+    mapRef.current?.flyTo({
+      center: [longitude, latitude],
+      zoom,
+      duration: MAP_CONFIG.TRANSITION_DURATION,
+    });
+    setIsFlying(false);
+  }, [isFlying, longitude, latitude, zoom, setIsFlying]);
+
+  // MapLibre owns the camera, so a store change that did not come from the map
+  // has to be pushed back into it. This is what lands a shared ?lat&lng&z URL,
+  // which useUrlSync writes to the store only after the map has mounted.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || isFlying || map.isMoving()) return;
+
+    const center = map.getCenter();
+    const diverged =
+      Math.abs(center.lat - latitude) > CAMERA_EPSILON_DEG ||
+      Math.abs(center.lng - longitude) > CAMERA_EPSILON_DEG ||
+      Math.abs(map.getZoom() - zoom) > CAMERA_EPSILON_ZOOM;
+
+    if (diverged) {
+      map.jumpTo({ center: [longitude, latitude], zoom, bearing, pitch });
+    }
+  }, [latitude, longitude, zoom, bearing, pitch, isFlying, isMapLoaded]);
+
   const handleZoomIn = useCallback(() => {
-    setViewState({ zoom: Math.min(zoom + 1, MAP_CONFIG.MAX_ZOOM) });
-  }, [zoom, setViewState]);
+    mapRef.current?.zoomTo(Math.min(zoom + 1, MAP_CONFIG.MAX_ZOOM), {
+      duration: 200,
+    });
+  }, [zoom]);
 
   const handleZoomOut = useCallback(() => {
-    setViewState({ zoom: Math.max(zoom - 1, MAP_CONFIG.MIN_ZOOM) });
-  }, [zoom, setViewState]);
+    mapRef.current?.zoomTo(Math.max(zoom - 1, MAP_CONFIG.MIN_ZOOM), {
+      duration: 200,
+    });
+  }, [zoom]);
 
   const handleLocate = useCallback(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setViewState({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+          mapRef.current?.flyTo({
+            center: [position.coords.longitude, position.coords.latitude],
             zoom: 12,
+            duration: MAP_CONFIG.TRANSITION_DURATION,
           });
         },
         (error) => {
@@ -132,84 +164,31 @@ export function MapContainer() {
         }
       );
     }
-  }, [setViewState]);
+  }, []);
 
   const handleMapLoad = useCallback(() => {
     setIsMapLoaded(true);
   }, []);
 
-  const views = useMemo(() => {
-    if (isGlobe) {
-      return new GlobeView({ id: "globe", controller: true });
-    }
-    return new MapView({ id: "map", controller: true });
-  }, [isGlobe]);
+  const layers = useMemo((): Layer[] => {
+    // `beforeId` places these underneath the first MapLibre layer that must
+    // stay readable over them. Everything declared after that id in the style,
+    // which is every Overture layer and every label, draws on top.
+    //
+    // @deck.gl/mapbox reads this off `layer.props`, but deck.gl's core
+    // LayerProps does not declare it, so the prop needs a cast to be set.
+    const anchored = { beforeId: OVERLAY_ANCHOR_LAYER } as unknown as Partial<
+      Required<LayerProps>
+    >;
 
-  // Globe layers: land + graticule
-  const globeLayers = useMemo((): Layer[] => {
-    if (!isGlobe) return [];
+    // Temperature first, canopy second. deck.gl draws in array order, so the
+    // canopy lands on top and its transparent ground lets the heat through.
+    const stack = lstLayer ? [lstLayer, ...chmLayers] : chmLayers;
+    return stack.map((layer) => layer.clone(anchored));
+  }, [lstLayer, chmLayers]);
 
-    const layers: Layer[] = [];
-
-    // Graticule (subtle grid lines)
-    if (graticuleData) {
-      layers.push(
-        new GeoJsonLayer({
-          id: "graticule",
-          data: graticuleData,
-          stroked: true,
-          filled: false,
-          lineWidthMinPixels: 0.5,
-          getLineColor: theme === "dark" ? [255, 255, 255, 25] : [0, 0, 0, 25],
-        })
-      );
-    }
-
-    // Land masses
-    if (landData) {
-      layers.push(
-        new GeoJsonLayer({
-          id: "land",
-          data: landData,
-          stroked: true,
-          filled: true,
-          getFillColor: theme === "dark" ? [26, 29, 34, 255] : [215, 213, 207, 255],
-          getLineColor: theme === "dark" ? [35, 39, 45, 255] : [200, 198, 191, 255],
-          lineWidthMinPixels: 0.5,
-        })
-      );
-    }
-
-    // LST layer on globe
-    if (lstLayer) {
-      layers.push(lstLayer);
-    }
-
-    return layers;
-  }, [isGlobe, landData, graticuleData, theme, lstLayer]);
-
-  // Map layers (for flat view)
-  const mapLayers = useMemo((): Layer[] => {
-    if (isGlobe) return [];
-
-    const layers: Layer[] = [];
-
-    // LST Zarr layer
-    if (lstLayer) {
-      layers.push(lstLayer);
-    }
-
-    return layers;
-  }, [isGlobe, lstLayer]);
-
-  const layers = useMemo(() => {
-    return [...globeLayers, ...mapLayers];
-  }, [globeLayers, mapLayers]);
-
-  // Build MapLibre style for flat view
+  // Build the MapLibre basemap style
   const mapStyle = useMemo(() => {
-    if (isGlobe) return undefined;
-
     return {
       version: 8 as const,
       glyphs: SOURCES.glyphs,
@@ -217,6 +196,7 @@ export function MapContainer() {
         basemap: SOURCES.basemap,
         ...(showSatellite ? { satellite: SOURCES.satellite } : {}),
         ...(showAdm ? { divisions: SOURCES.divisions } : {}),
+        ...(showBuildings ? { buildings: SOURCES.buildings } : {}),
       },
       layers: [
         // Satellite base (if enabled)
@@ -275,36 +255,14 @@ export function MapContainer() {
           },
         },
 
-        // Admin boundaries (Overture divisions)
-        ...(showAdm
-          ? [
-              {
-                id: "admin-boundaries",
-                type: "line" as const,
-                source: "divisions",
-                "source-layer": "division_boundary",
-                paint: {
-                  "line-color":
-                    theme === "dark"
-                      ? "rgba(199, 84, 38, 0.6)"
-                      : "rgba(199, 84, 38, 0.5)",
-                  "line-width": [
-                    "interpolate",
-                    ["linear"],
-                    ["zoom"],
-                    2, 0.3,
-                    6, 0.8,
-                    10, 1.5,
-                    14, 2.5,
-                  ],
-                },
-              },
-            ]
-          : []),
+        // ------------------------------------------------------------------
+        // The deck.gl raster is interleaved immediately before "roads", so
+        // every layer from here down draws on top of the temperature data.
+        // ------------------------------------------------------------------
 
         // Roads (higher zoom)
         {
-          id: "roads",
+          id: OVERLAY_ANCHOR_LAYER,
           type: "line" as const,
           source: "basemap",
           "source-layer": "roads",
@@ -319,6 +277,73 @@ export function MapContainer() {
           },
         },
 
+        // Admin boundaries (Overture divisions)
+        ...(showAdm
+          ? [
+              {
+                id: "admin-boundaries",
+                type: "line" as const,
+                source: "divisions",
+                // Boundary lines rather than area outlines, so a border shared
+                // by two divisions is drawn once instead of twice.
+                "source-layer": "division_boundary",
+                paint: {
+                  "line-color":
+                    theme === "dark"
+                      ? "rgba(255, 255, 255, 0.45)"
+                      : "rgba(0, 0, 0, 0.42)",
+                  "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    2, 0.3,
+                    6, 0.8,
+                    10, 1.5,
+                    14, 2.5,
+                  ],
+                },
+              },
+            ]
+          : []),
+
+        // Building footprints (Overture buildings)
+        ...(showBuildings
+          ? [
+              {
+                id: "building-outline",
+                type: "line" as const,
+                source: "buildings",
+                "source-layer": "building",
+                // Outline only. A fill would hide the roof temperature that
+                // makes the footprint worth showing.
+                minzoom: BUILDINGS_MIN_ZOOM,
+                paint: {
+                  // White in both themes. Footprints sit on the heat ramp,
+                  // which runs dark red to orange, so white is the value that
+                  // separates from it at either end.
+                  "line-color": "#ffffff",
+                  "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    BUILDINGS_MIN_ZOOM, 0.4,
+                    14, 0.7,
+                    17, 1.2,
+                    19, 2,
+                  ],
+                  "line-opacity": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    BUILDINGS_MIN_ZOOM, 0.45,
+                    14, 0.75,
+                    17, 0.9,
+                  ],
+                },
+              },
+            ]
+          : []),
+
         // Place labels - cities
         {
           id: "place-city",
@@ -329,7 +354,7 @@ export function MapContainer() {
           minzoom: 4,
           layout: {
             "text-field": "{name}",
-            "text-font": ["Helvetica Bold"],
+            "text-font": ["IBM Plex Sans SemiBold"],
             "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 12, 16],
           },
           paint: {
@@ -354,7 +379,7 @@ export function MapContainer() {
           minzoom: 8,
           layout: {
             "text-field": "{name}",
-            "text-font": ["Helvetica"],
+            "text-font": ["IBM Plex Sans Regular"],
             "text-size": ["interpolate", ["linear"], ["zoom"], 8, 10, 12, 13],
           },
           paint: {
@@ -365,7 +390,7 @@ export function MapContainer() {
         },
       ],
     } as StyleSpecification;
-  }, [isGlobe, theme, showSatellite, showAdm]);
+  }, [theme, showSatellite, showAdm, showBuildings]);
 
   return (
     <div
@@ -373,35 +398,19 @@ export function MapContainer() {
       role="application"
       aria-label="Interactive land surface temperature map"
     >
-      {/* Globe background gradient */}
-      {isGlobe && (
-        <div
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            background:
-              theme === "dark"
-                ? "radial-gradient(circle at 50% 50%, #1a1d22 0%, #0c0e11 70%)"
-                : "radial-gradient(circle at 50% 50%, #ffffff 0%, #f2f1ec 70%)",
-          }}
-        />
-      )}
-
-      <DeckGL
-        views={views}
-        viewState={viewState}
-        onViewStateChange={onViewStateChange}
+      <ReactMapGL
+        ref={mapRef}
+        mapStyle={mapStyle}
+        initialViewState={{ ...initialCamera, bearing, pitch }}
+        onMove={onMove}
         onLoad={handleMapLoad}
-        layers={layers}
-        controller={true}
-        style={{ position: "absolute", inset: "0" }}
+        minZoom={MAP_CONFIG.MIN_ZOOM}
+        maxZoom={MAP_CONFIG.MAX_ZOOM}
+        attributionControl={false}
+        style={{ position: "absolute", inset: 0 }}
       >
-        {!isGlobe && mapStyle && (
-          <ReactMapGL
-            mapStyle={mapStyle}
-            attributionControl={false}
-          />
-        )}
-      </DeckGL>
+        <DeckOverlay layers={layers} />
+      </ReactMapGL>
 
       {/* Loading indicator */}
       {!isMapLoaded && (
@@ -420,9 +429,33 @@ export function MapContainer() {
         </div>
       )}
 
+      {/* Catalog failure. Without it a broken collection reads as an empty map. */}
+      {(lstError || chmError) && (
+        <div
+          className="absolute inset-x-0 top-0 flex justify-center"
+          style={{ zIndex: 20 }}
+          role="alert"
+        >
+          <div
+            className="mono-label"
+            style={{
+              fontSize: 10,
+              padding: "6px 12px",
+              background: "var(--surface)",
+              border: "1px solid var(--line)",
+              color: "var(--h8-hex)",
+            }}
+          >
+            {lstError
+              ? `TEMPERATURE DATA UNAVAILABLE — ${lstError.message}`
+              : `CANOPY DATA UNAVAILABLE — ${chmError?.message}`}
+          </div>
+        </div>
+      )}
+
       {/* Map chrome */}
-      <div className="map-chrome bl" style={{ zIndex: 10 }}>
-        <Legend />
+      <div className="map-chrome tl" style={{ zIndex: 11 }}>
+        <Search />
       </div>
 
       <div className="map-chrome tr" style={{ zIndex: 10 }}>

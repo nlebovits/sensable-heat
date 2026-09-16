@@ -2,10 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMapStore, type Period, type Compositing } from "@/store/map-store";
-
-const VALID_PERIODS: Period[] = ["single year", "multi-year", "rolling avg"];
-const VALID_COMPOSITING: Compositing[] = ["p99", "p95", "mean", "max"];
+import type { ReadonlyURLSearchParams } from "next/navigation";
+import { useMapStore } from "@/store/map-store";
 
 function parseFloat2(val: string | null, fallback: number): number {
   if (!val) return fallback;
@@ -13,13 +11,16 @@ function parseFloat2(val: string | null, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function parseYears(val: string | null): number[] | null {
-  if (!val) return null;
-  const years = val
-    .split(",")
-    .map((s) => parseInt(s, 10))
-    .filter((n) => Number.isFinite(n) && n >= 2000 && n <= 2030);
-  return years.length > 0 ? years : null;
+/** Camera the URL asks for, falling back to whatever the caller already has. */
+export function cameraFromUrl(
+  params: URLSearchParams | ReadonlyURLSearchParams,
+  fallback: { latitude: number; longitude: number; zoom: number }
+) {
+  return {
+    latitude: parseFloat2(params.get("lat"), fallback.latitude),
+    longitude: parseFloat2(params.get("lng"), fallback.longitude),
+    zoom: parseFloat2(params.get("z"), fallback.zoom),
+  };
 }
 
 export function useUrlSync() {
@@ -31,16 +32,16 @@ export function useUrlSync() {
     latitude,
     longitude,
     zoom,
-    period,
-    years,
-    compositing,
     theme,
+    showLst,
+    showChm,
     showAdm,
+    showBuildings,
     showSatellite,
     setViewState,
-    setPeriod,
-    setYears,
-    setCompositing,
+    setShowLst,
+    setShowChm,
+    setShowBuildings,
     setTheme,
     setShowAdm,
     setShowSatellite,
@@ -59,19 +60,14 @@ export function useUrlSync() {
       setViewState({ latitude: lat, longitude: lng, zoom: z });
     }
 
-    const urlPeriod = searchParams.get("period") as Period | null;
-    if (urlPeriod && VALID_PERIODS.includes(urlPeriod)) {
-      setPeriod(urlPeriod);
+    const urlLst = searchParams.get("lst");
+    if (urlLst !== null) {
+      setShowLst(urlLst === "1");
     }
 
-    const urlYears = parseYears(searchParams.get("years"));
-    if (urlYears) {
-      setYears(urlYears);
-    }
-
-    const urlComp = searchParams.get("comp") as Compositing | null;
-    if (urlComp && VALID_COMPOSITING.includes(urlComp)) {
-      setCompositing(urlComp);
+    const urlChm = searchParams.get("chm");
+    if (urlChm !== null) {
+      setShowChm(urlChm === "1");
     }
 
     const urlTheme = searchParams.get("theme");
@@ -84,6 +80,11 @@ export function useUrlSync() {
       setShowAdm(urlAdm === "1");
     }
 
+    const urlBuildings = searchParams.get("bld");
+    if (urlBuildings !== null) {
+      setShowBuildings(urlBuildings === "1");
+    }
+
     const urlSat = searchParams.get("sat");
     if (urlSat !== null) {
       setShowSatellite(urlSat === "1");
@@ -94,9 +95,9 @@ export function useUrlSync() {
     longitude,
     zoom,
     setViewState,
-    setPeriod,
-    setYears,
-    setCompositing,
+    setShowLst,
+    setShowChm,
+    setShowBuildings,
     setTheme,
     setShowAdm,
     setShowSatellite,
@@ -116,11 +117,11 @@ export function useUrlSync() {
       params.set("lat", latitude.toFixed(4));
       params.set("lng", longitude.toFixed(4));
       params.set("z", zoom.toFixed(2));
-      params.set("period", period);
-      params.set("years", years.join(","));
-      params.set("comp", compositing);
       params.set("theme", theme);
+      params.set("lst", showLst ? "1" : "0");
+      params.set("chm", showChm ? "1" : "0");
       params.set("adm", showAdm ? "1" : "0");
+      params.set("bld", showBuildings ? "1" : "0");
       params.set("sat", showSatellite ? "1" : "0");
 
       const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -132,5 +133,15 @@ export function useUrlSync() {
         clearTimeout(updateTimeoutRef.current);
       }
     };
-  }, [latitude, longitude, zoom, period, years, compositing, theme, showAdm, showSatellite]);
+  }, [
+    latitude,
+    longitude,
+    zoom,
+    theme,
+    showLst,
+    showChm,
+    showAdm,
+    showBuildings,
+    showSatellite,
+  ]);
 }
