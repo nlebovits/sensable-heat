@@ -37,6 +37,18 @@ export const LST = {
   /** Widest DN a uint16 texture normalizes against, so shader value = dn / this. */
   MAX_DN: 65535,
 
+  /**
+   * Bytes each item COG reads to open itself.
+   *
+   * Every item is 18000 by 18000 over six overviews, so its IFD chain and all
+   * of its tile offset arrays end by byte 16268, and this covers them in one
+   * request. `GeoTIFF.fromUrl` defaults to 64 KB, which reads four times what
+   * it uses. That default is affordable on one file and not on ninety-eight:
+   * the opening view holds most of the collection on screen, where it cost
+   * 6.27 MB of header against 3.71 MB of pixels.
+   */
+  HEADER_CHUNK_BYTES: 24 * 1024,
+
   /** Half-width of the display range, in standard deviations. */
   SIGMA: 2,
 
@@ -138,6 +150,21 @@ export const CHM = {
 
   /** First zoom at which the native tiles beat the global overview. */
   MOSAIC_MIN_ZOOM: 10,
+
+  /**
+   * Bytes each native tile reads to open itself.
+   *
+   * A tile carries fourteen IFDs, a seven-level data pyramid beside a matching
+   * mask pyramid, and they end at byte 90228. The 64 KB default splits that
+   * into two requests for the same bytes.
+   */
+  TILE_HEADER_CHUNK_BYTES: 96 * 1024,
+
+  /**
+   * Bytes the global overview reads to open itself. Its eight IFDs run to byte
+   * 176758, which is three requests at the 64 KB default.
+   */
+  OVERVIEW_HEADER_CHUNK_BYTES: 192 * 1024,
 
   // Pixels are canopy height in whole metres. The source sets no nodata mask,
   // so 0 means both "measured zero" and "no data". Treating it as nodata is

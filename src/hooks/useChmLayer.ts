@@ -5,6 +5,7 @@ import { COGLayer, MosaicLayer } from "@developmentseed/deck.gl-geotiff";
 import type { Layer } from "@deck.gl/core";
 
 import { CHM } from "@/lib/config";
+import { openCog } from "@/lib/cog-cache";
 import { fetchChmTiles, type ChmTile } from "@/lib/chm-catalog";
 import { useMapStore } from "@/store/map-store";
 import {
@@ -37,7 +38,7 @@ const renderTile = makeRenderTile({
  * native ones.
  *
  * The tile index is read on first use rather than at startup, because it costs
- * about 1.4 MB and four seconds and is wasted while the layer is off.
+ * about 1.4 MB and a second and a half and is wasted while the layer is off.
  */
 export function useChmLayer(visible: boolean) {
   const zoom = useMapStore((s) => s.zoom);
@@ -89,7 +90,7 @@ export function useChmLayer(visible: boolean) {
           renderSource: (source, { signal }) =>
             new COGLayer<RasterTileData>({
               id: `chm-cog-${source.id}`,
-              geotiff: source.cogUrl,
+              geotiff: openCog(source.cogUrl, CHM.TILE_HEADER_CHUNK_BYTES),
               signal,
               getTileData,
               renderTile,
@@ -102,7 +103,7 @@ export function useChmLayer(visible: boolean) {
     return [
       new COGLayer<RasterTileData>({
         id: "chm-overview",
-        geotiff: CHM.OVERVIEW_URL,
+        geotiff: openCog(CHM.OVERVIEW_URL, CHM.OVERVIEW_HEADER_CHUNK_BYTES),
         getTileData,
         renderTile,
       }),

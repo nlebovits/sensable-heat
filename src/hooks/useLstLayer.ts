@@ -5,6 +5,7 @@ import { COGLayer, MosaicLayer } from "@developmentseed/deck.gl-geotiff";
 import type { Layer } from "@deck.gl/core";
 
 import { LST } from "@/lib/config";
+import { openCog } from "@/lib/cog-cache";
 import {
   celsiusToDn,
   fetchLstItems,
@@ -113,7 +114,7 @@ export function useLstLayer(visible: boolean = true) {
       renderSource: (source, { signal }) =>
         new COGLayer<RasterTileData>({
           id: `lst-cog-${source.id}`,
-          geotiff: source.cogUrl,
+          geotiff: openCog(source.cogUrl, LST.HEADER_CHUNK_BYTES),
           signal,
           getTileData,
           renderTile,
