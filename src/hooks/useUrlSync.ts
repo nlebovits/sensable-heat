@@ -32,7 +32,6 @@ export function useUrlSync() {
     latitude,
     longitude,
     zoom,
-    theme,
     showLst,
     showChm,
     showAdm,
@@ -42,7 +41,6 @@ export function useUrlSync() {
     setShowLst,
     setShowChm,
     setShowBuildings,
-    setTheme,
     setShowAdm,
     setShowSatellite,
   } = useMapStore();
@@ -70,11 +68,6 @@ export function useUrlSync() {
       setShowChm(urlChm === "1");
     }
 
-    const urlTheme = searchParams.get("theme");
-    if (urlTheme === "light" || urlTheme === "dark") {
-      setTheme(urlTheme);
-    }
-
     const urlAdm = searchParams.get("adm");
     if (urlAdm !== null) {
       setShowAdm(urlAdm === "1");
@@ -98,7 +91,6 @@ export function useUrlSync() {
     setShowLst,
     setShowChm,
     setShowBuildings,
-    setTheme,
     setShowAdm,
     setShowSatellite,
   ]);
@@ -117,7 +109,6 @@ export function useUrlSync() {
       params.set("lat", latitude.toFixed(4));
       params.set("lng", longitude.toFixed(4));
       params.set("z", zoom.toFixed(2));
-      params.set("theme", theme);
       params.set("lst", showLst ? "1" : "0");
       params.set("chm", showChm ? "1" : "0");
       params.set("adm", showAdm ? "1" : "0");
@@ -137,7 +128,6 @@ export function useUrlSync() {
     latitude,
     longitude,
     zoom,
-    theme,
     showLst,
     showChm,
     showAdm,

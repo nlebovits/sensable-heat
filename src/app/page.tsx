@@ -1,10 +1,9 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { SidePanel } from "@/components/side-panel";
 import { MapContainer } from "@/components/map";
 import { WalkthroughProvider } from "@/components/walkthrough";
-import { useMapStore } from "@/store/map-store";
 import { useUrlSync } from "@/hooks/useUrlSync";
 
 function UrlSyncProvider({ children }: { children: React.ReactNode }) {
@@ -13,13 +12,6 @@ function UrlSyncProvider({ children }: { children: React.ReactNode }) {
 }
 
 function AppContent() {
-  const { theme } = useMapStore();
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("light", theme === "light");
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
-
   return (
     <div className="flex h-full">
       <SidePanel />

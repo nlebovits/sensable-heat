@@ -35,7 +35,6 @@ export function SidePanel() {
     setShowAdm,
     setShowBuildings,
     setShowSatellite,
-    setWalkthroughOpen,
   } = useMapStore();
 
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
@@ -112,48 +111,24 @@ export function SidePanel() {
             <div className="toggle-row">
               <span id="lst-label">
                 <span className="name">
+                  Land surface temperature
                   <InfoTip
+                    label="Land surface temperature"
                     content={
                       <>
                         The 95th percentile of every cloud-free Landsat 8/9
-                        thermal scene from 2021 through 2025. Data via the{" "}
+                        thermal scene from 2021 through 2025, hosted on{" "}
                         <a
-                          href="https://www.usgs.gov/landsat-missions/landsat-collection-2-level-2-science-products"
+                          href="https://source.coop/nlebovits/landsat-lst"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          Landsat Collection 2 Level-2 archive
-                        </a>{" "}
-                        at the{" "}
-                        <a
-                          href="https://www.usgs.gov/landsat-missions"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          USGS
-                        </a>
-                        ,{" "}
-                        <a
-                          href="https://creativecommons.org/publicdomain/zero/1.0/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          CC0-1.0
-                        </a>
-                        ,{" "}
-                        <a
-                          href="https://github.com/nlebovits/landsat-lst-smoke"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          processed by Nissim Lebovits
+                          Source Cooperative
                         </a>
                         .
                       </>
                     }
-                  >
-                    Land surface temperature
-                  </InfoTip>
+                  />
                 </span>
                 <span className="sub">p95 · 2021–25 composite · 30m</span>
               </span>
@@ -182,7 +157,9 @@ export function SidePanel() {
             <div className="toggle-row">
               <span id="chm-label">
                 <span className="name">
+                  Tree canopy height
                   <InfoTip
+                    label="Tree canopy height"
                     content={
                       <>
                         <a
@@ -219,9 +196,7 @@ export function SidePanel() {
                         .
                       </>
                     }
-                  >
-                    Tree canopy height
-                  </InfoTip>
+                  />
                 </span>
                 <span className="sub">
                   <a
@@ -350,54 +325,6 @@ export function SidePanel() {
               <ArrowRight size={16} />
             </span>
           </a>
-        </div>
-      </div>
-
-      {/* Footer, pinned below the scrolling region */}
-      <div className="panel-footer">
-        <div className="row">
-          <span>Surface temp</span>
-          <a
-            href="https://source.coop/nlebovits/landsat-lst"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Landsat LST · Source Coop
-          </a>
-        </div>
-        <div className="row">
-          <span>Canopy</span>
-          <a
-            href="https://source.coop/tge-labs/meta-chm-v2"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Meta CHM v2 · Source Coop
-          </a>
-        </div>
-        <div className="row">
-          <span>Buildings</span>
-          <a
-            href="https://overturemaps.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Overture Maps
-          </a>
-        </div>
-        <div className="row">
-          <span>Build</span>
-          <span>v0.1 · 2026-05</span>
-        </div>
-        <div className="row">
-          <span>Help</span>
-          <button
-            type="button"
-            className="footer-link"
-            onClick={() => setWalkthroughOpen(true)}
-          >
-            Replay walkthrough
-          </button>
         </div>
       </div>
     </aside>

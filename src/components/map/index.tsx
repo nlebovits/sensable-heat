@@ -58,7 +58,6 @@ export function MapContainer() {
     zoom,
     bearing,
     pitch,
-    theme,
     showLst,
     showChm,
     showAdm,
@@ -223,7 +222,7 @@ export function MapContainer() {
                 source: "basemap",
                 "source-layer": "land",
                 paint: {
-                  "fill-color": theme === "dark" ? "#14171b" : "#f7f6f1",
+                  "fill-color": "#f7f6f1",
                 },
               },
             ]
@@ -236,7 +235,7 @@ export function MapContainer() {
           source: "basemap",
           "source-layer": "water",
           paint: {
-            "fill-color": theme === "dark" ? "#0c0e11" : "#d4e4ec",
+            "fill-color": "#d4e4ec",
           },
         },
 
@@ -247,10 +246,7 @@ export function MapContainer() {
           source: "basemap",
           "source-layer": "boundaries",
           paint: {
-            "line-color":
-              theme === "dark"
-                ? "rgba(255, 255, 255, 0.25)"
-                : "rgba(0, 0, 0, 0.2)",
+            "line-color": "rgba(0, 0, 0, 0.2)",
             "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.5, 10, 1.5],
           },
         },
@@ -269,10 +265,7 @@ export function MapContainer() {
           filter: ["in", "kind", "highway", "major_road"],
           minzoom: 8,
           paint: {
-            "line-color":
-              theme === "dark"
-                ? "rgba(255, 255, 255, 0.12)"
-                : "rgba(0, 0, 0, 0.1)",
+            "line-color": "rgba(0, 0, 0, 0.1)",
             "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 14, 2],
           },
         },
@@ -288,10 +281,7 @@ export function MapContainer() {
                 // by two divisions is drawn once instead of twice.
                 "source-layer": "division_boundary",
                 paint: {
-                  "line-color":
-                    theme === "dark"
-                      ? "rgba(255, 255, 255, 0.45)"
-                      : "rgba(0, 0, 0, 0.42)",
+                  "line-color": "rgba(0, 0, 0, 0.42)",
                   "line-width": [
                     "interpolate",
                     ["linear"],
@@ -318,9 +308,9 @@ export function MapContainer() {
                 // makes the footprint worth showing.
                 minzoom: BUILDINGS_MIN_ZOOM,
                 paint: {
-                  // White in both themes. Footprints sit on the heat ramp,
-                  // which runs dark red to orange, so white is the value that
-                  // separates from it at either end.
+                  // Footprints sit on the heat ramp, which runs dark red
+                  // to orange, so white is the value that separates from it at
+                  // either end.
                   "line-color": "#ffffff",
                   "line-width": [
                     "interpolate",
@@ -358,8 +348,8 @@ export function MapContainer() {
             "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 12, 16],
           },
           paint: {
-            "text-color": theme === "dark" ? "#f2f1ec" : "#0c0e11",
-            "text-halo-color": theme === "dark" ? "#0c0e11" : "#f2f1ec",
+            "text-color": "#0c0e11",
+            "text-halo-color": "#f2f1ec",
             "text-halo-width": 1.5,
           },
         },
@@ -383,14 +373,14 @@ export function MapContainer() {
             "text-size": ["interpolate", ["linear"], ["zoom"], 8, 10, 12, 13],
           },
           paint: {
-            "text-color": theme === "dark" ? "#9a9d9f" : "#5e5e5a",
-            "text-halo-color": theme === "dark" ? "#0c0e11" : "#f2f1ec",
+            "text-color": "#5e5e5a",
+            "text-halo-color": "#f2f1ec",
             "text-halo-width": 1,
           },
         },
       ],
     } as StyleSpecification;
-  }, [theme, showSatellite, showAdm, showBuildings]);
+  }, [showSatellite, showAdm, showBuildings]);
 
   return (
     <div

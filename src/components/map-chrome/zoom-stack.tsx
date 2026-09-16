@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Minus, Locate, Sun, Moon } from "@/components/icons";
+import { Plus, Minus, Locate, CircleQuestionMark } from "@/components/icons";
 import { useMapStore } from "@/store/map-store";
 
 interface ZoomStackProps {
@@ -10,7 +10,9 @@ interface ZoomStackProps {
 }
 
 export function ZoomStack({ onZoomIn, onZoomOut, onLocate }: ZoomStackProps) {
-  const { theme, toggleTheme } = useMapStore();
+  // The walkthrough is app state rather than a map action, so this button
+  // reaches the store directly instead of taking a callback like the others.
+  const setWalkthroughOpen = useMapStore((state) => state.setWalkthroughOpen);
 
   return (
     <div className="zoom-stack" role="group" aria-label="Map controls">
@@ -36,15 +38,11 @@ export function ZoomStack({ onZoomIn, onZoomOut, onLocate }: ZoomStackProps) {
         <Locate size={16} aria-hidden="true" />
       </button>
       <button
-        onClick={toggleTheme}
-        title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-        aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+        onClick={() => setWalkthroughOpen(true)}
+        title="Replay the walkthrough"
+        aria-label="Replay the walkthrough"
       >
-        {theme === "dark" ? (
-          <Sun size={16} aria-hidden="true" />
-        ) : (
-          <Moon size={16} aria-hidden="true" />
-        )}
+        <CircleQuestionMark size={16} aria-hidden="true" />
       </button>
     </div>
   );

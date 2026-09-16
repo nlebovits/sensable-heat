@@ -4,8 +4,6 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 @source "../../node_modules/onborda/dist";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ============================================================
    Sensable Heat — brand tokens
    IBM Plex Sans (UI) + IBM Plex Mono (labels)
@@ -54,15 +52,15 @@
 }
 
 :root {
-  /* ---- Neutrals (dark default) ---- */
-  --bg: #0c0e11;
-  --surface: #14171b;
-  --surface-2: #1a1d22;
-  --line: #23272d;
-  --line-2: #2c3036;
-  --fg: #f2f1ec;
-  --mute: #6b6e74;
-  --mute-2: #9a9d9f;
+  /* ---- Neutrals ---- */
+  --bg: #f2f1ec;
+  --surface: #ffffff;
+  --surface-2: #f7f6f1;
+  --line: #d8d6cf;
+  --line-2: #c5c2b8;
+  --fg: #0c0e11;
+  --mute: #8a8a85;
+  --mute-2: #5e5e5a;
 
   /* ---- 9-step OKLCH heat ramp ---- */
   --h0: oklch(0.18 0.04 25);
@@ -113,24 +111,11 @@
   --view-snap-ms: 700ms;
 }
 
-/* ---- Light theme ---- */
-.light {
-  --bg: #f2f1ec;
-  --surface: #ffffff;
-  --surface-2: #f7f6f1;
-  --line: #d8d6cf;
-  --line-2: #c5c2b8;
-  --fg: #0c0e11;
-  --mute: #8a8a85;
-  --mute-2: #5e5e5a;
-}
-
 /* ============================================================
    Dither texture — Source Coop inspired
    ============================================================ */
 :root {
-  --dither: url("data:image/svg+xml,%3Csvg width='2' height='2' viewBox='0 0 2 2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23ffffff' fill-opacity='0.08'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23ffffff' fill-opacity='0.08'/%3E%3C/svg%3E");
-  --dither-dark: url("data:image/svg+xml,%3Csvg width='2' height='2' viewBox='0 0 2 2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000' fill-opacity='0.06'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000' fill-opacity='0.06'/%3E%3C/svg%3E");
+  --dither: url("data:image/svg+xml,%3Csvg width='2' height='2' viewBox='0 0 2 2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000' fill-opacity='0.06'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000' fill-opacity='0.06'/%3E%3C/svg%3E");
 }
 
 .dither {
@@ -145,10 +130,6 @@
   background-repeat: repeat;
   pointer-events: none;
   z-index: 1;
-}
-
-.light .dither::after {
-  background-image: var(--dither-dark);
 }
 
 @layer base {
@@ -249,10 +230,6 @@
   background-repeat: repeat;
   pointer-events: none;
   z-index: -1;
-}
-
-.light .glass::before {
-  background-image: var(--dither-dark);
 }
 
 /* ============================================================
@@ -359,10 +336,6 @@
   z-index: 0;
 }
 
-.light .panel::before {
-  background-image: var(--dither-dark);
-}
-
 .panel > * {
   position: relative;
   z-index: 1;
@@ -384,15 +357,14 @@
 
 /* Glyph raster behind the masthead. Decoration only, so it stays well under
    the type and fades out before it reaches the tagline. */
-/* The ramp is light, so it carries against the dark panel well below full
-   strength. Opacity is the knob for how far forward the map sits. */
+/* Opacity is the knob for how far forward the map sits behind the type. */
 .heat-raster {
   position: absolute;
   inset: 0;
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.45;
+  opacity: 0.75;
   /* Fades out before it reaches the tagline, so the map never competes with
      the type it sits behind. */
   -webkit-mask-image: linear-gradient(
@@ -411,11 +383,6 @@
 
 .heat-raster pre {
   margin: 0;
-}
-
-/* The raster is built for the dark panel. On white it needs to sit back. */
-.light .heat-raster {
-  opacity: 0.75;
 }
 
 .panel-header .mono-label {
@@ -648,15 +615,39 @@
   color: var(--fg);
 }
 
-/* Hover explanation on a layer name. No icon, the text itself is the trigger. */
-.info-trigger {
-  cursor: help;
-  transition: color 0.15s var(--ease-out);
+/* An "i" button after a layer name. A click opens the explanation. Square to
+   match the switch beside it, which is the other control on the row. */
+.info-tip-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-left: 6px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  color: var(--mute);
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
 }
 
-.info-trigger:hover,
-.info-trigger:focus-visible {
+.info-tip-button svg {
+  width: 11px;
+  height: 11px;
+}
+
+.info-tip-button:hover,
+.info-tip-button[data-popup-open] {
+  border-color: var(--h6-hex);
   color: var(--h6-hex);
+}
+
+.info-tip-button:focus-visible {
+  outline: 2px solid var(--h6-hex);
+  outline-offset: 2px;
 }
 
 /* Sits above the panel and the map chrome, so the popup never lands behind a
@@ -675,7 +666,6 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  cursor: default;
 }
 
 .info-tip-popup a {
@@ -783,48 +773,8 @@
 }
 
 /* Panel footer */
-.panel-footer {
-  flex-shrink: 0;
-  padding: 16px 20px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--mute);
-  background: var(--surface);
-  border-top: 1px solid var(--line);
-}
-
-.panel-footer .row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 4px 0;
-}
-
-.panel-footer .row a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-align: right;
-}
-
-.panel-footer .row a:hover,
-.panel-footer .row .footer-link:hover {
-  color: var(--fg);
-}
-
-.panel-footer .row .footer-link {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 /* Walkthrough tour (Onborda). The library ships Tailwind utilities, so the
-   card itself is styled here to match the panel in both themes. */
+   card itself is styled here to match the panel. */
 
 /* Onborda wraps the app in two plain divs. Without a height they collapse the
    full-height flex layout underneath them. */
@@ -989,10 +939,6 @@
   pointer-events: none;
 }
 
-.light .zoom-stack::before {
-  background-image: var(--dither-dark);
-}
-
 .zoom-stack button {
   width: 36px;
   height: 36px;
@@ -1041,10 +987,6 @@
   background-repeat: repeat;
   pointer-events: none;
   z-index: 1;
-}
-
-.light .attribution::before {
-  background-image: var(--dither-dark);
 }
 
 /* Collapses to zero width, so the control is a 36px square at rest */
@@ -1153,10 +1095,6 @@
   background-image: var(--dither);
   background-repeat: repeat;
   pointer-events: none;
-}
-
-.light .floating-search .search-input::before {
-  background-image: var(--dither-dark);
 }
 
 .floating-search .search-input > * {
@@ -1406,11 +1344,6 @@
   /* Leave room for the zoom stack, which sits 36px wide at the top right */
   .floating-search {
     width: calc(100vw - 84px);
-  }
-
-  /* Hide panel footer on mobile collapsed */
-  .panel.left:not(.expanded) .panel-footer {
-    display: none;
   }
 
   /* Topbar adjustments */

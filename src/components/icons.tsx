@@ -1,7 +1,6 @@
 export {
   Search,
-  Sun,
-  Moon,
+  CircleQuestionMark,
   Plus,
   Minus,
   Locate,

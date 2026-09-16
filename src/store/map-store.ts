@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { MAP_CONFIG } from "@/lib/config";
 import type { CelsiusRange } from "@/lib/lst-catalog";
 
@@ -29,7 +28,6 @@ interface MapState {
   admId: string | null;
 
   // UI
-  theme: "dark" | "light";
   panelOpen: boolean;
   /** True while the walkthrough dialog is open by explicit request. */
   walkthroughOpen: boolean;
@@ -44,83 +42,68 @@ interface MapState {
   setLstRange: (range: CelsiusRange | null) => void;
   setAdmFilter: (path: string[], id: string | null) => void;
   clearAdmFilter: () => void;
-  setTheme: (theme: "dark" | "light") => void;
-  toggleTheme: () => void;
   setPanelOpen: (open: boolean) => void;
   setWalkthroughOpen: (open: boolean) => void;
   flyTo: (lng: number, lat: number, zoom?: number) => void;
   setIsFlying: (isFlying: boolean) => void;
 }
 
-export const useMapStore = create<MapState>()(
-  persist(
-    (set) => ({
-      // Initial camera: framed on the LST collection's coverage
-      latitude: MAP_CONFIG.INITIAL_VIEW.latitude,
-      longitude: MAP_CONFIG.INITIAL_VIEW.longitude,
-      zoom: MAP_CONFIG.INITIAL_VIEW.zoom,
-      bearing: MAP_CONFIG.INITIAL_VIEW.bearing,
-      pitch: MAP_CONFIG.INITIAL_VIEW.pitch,
-      isFlying: false,
+export const useMapStore = create<MapState>()((set) => ({
+  // Initial camera: framed on the LST collection's coverage
+  latitude: MAP_CONFIG.INITIAL_VIEW.latitude,
+  longitude: MAP_CONFIG.INITIAL_VIEW.longitude,
+  zoom: MAP_CONFIG.INITIAL_VIEW.zoom,
+  bearing: MAP_CONFIG.INITIAL_VIEW.bearing,
+  pitch: MAP_CONFIG.INITIAL_VIEW.pitch,
+  isFlying: false,
 
-      // Layers
-      showLst: true,
-      showChm: false,
-      showAdm: true,
-      showBuildings: false,
-      showSatellite: false,
+  // Layers
+  showLst: true,
+  showChm: false,
+  showAdm: true,
+  showBuildings: false,
+  showSatellite: false,
 
-      lstRange: null,
+  lstRange: null,
 
-      // Admin filter
-      admPath: [],
-      admId: null,
+  // Admin filter
+  admPath: [],
+  admId: null,
 
-      // UI
-      theme: "dark",
-      panelOpen: true,
-      walkthroughOpen: false,
+  // UI
+  panelOpen: true,
+  walkthroughOpen: false,
 
-      // Actions
-      setViewState: (viewState) => set((state) => ({ ...state, ...viewState })),
+  // Actions
+  setViewState: (viewState) => set((state) => ({ ...state, ...viewState })),
 
-      setShowLst: (showLst) => set({ showLst }),
+  setShowLst: (showLst) => set({ showLst }),
 
-      setShowChm: (showChm) => set({ showChm }),
+  setShowChm: (showChm) => set({ showChm }),
 
-      setShowAdm: (showAdm) => set({ showAdm }),
+  setShowAdm: (showAdm) => set({ showAdm }),
 
-      setShowBuildings: (showBuildings) => set({ showBuildings }),
+  setShowBuildings: (showBuildings) => set({ showBuildings }),
 
-      setShowSatellite: (showSatellite) => set({ showSatellite }),
+  setShowSatellite: (showSatellite) => set({ showSatellite }),
 
-      setLstRange: (lstRange) => set({ lstRange }),
+  setLstRange: (lstRange) => set({ lstRange }),
 
-      setAdmFilter: (admPath, admId) => set({ admPath, admId }),
+  setAdmFilter: (admPath, admId) => set({ admPath, admId }),
 
-      clearAdmFilter: () => set({ admPath: [], admId: null }),
+  clearAdmFilter: () => set({ admPath: [], admId: null }),
 
-      setTheme: (theme) => set({ theme }),
+  setPanelOpen: (panelOpen) => set({ panelOpen }),
 
-      toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
+  setWalkthroughOpen: (walkthroughOpen) => set({ walkthroughOpen }),
 
-      setPanelOpen: (panelOpen) => set({ panelOpen }),
-
-      setWalkthroughOpen: (walkthroughOpen) => set({ walkthroughOpen }),
-
-      flyTo: (lng, lat, zoom = 12) =>
-        set({
-          longitude: lng,
-          latitude: lat,
-          zoom,
-          isFlying: true,
-        }),
-
-      setIsFlying: (isFlying) => set({ isFlying }),
+  flyTo: (lng, lat, zoom = 12) =>
+    set({
+      longitude: lng,
+      latitude: lat,
+      zoom,
+      isFlying: true,
     }),
-    {
-      name: "sensable-heat-settings",
-      partialize: (state) => ({ theme: state.theme }),
-    }
-  )
-);
+
+  setIsFlying: (isFlying) => set({ isFlying }),
+}));
