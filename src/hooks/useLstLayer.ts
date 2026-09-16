@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { COGLayer, MosaicLayer } from "@developmentseed/deck.gl-geotiff";
-import { SolidPolygonLayer } from "@deck.gl/layers";
-import type { Layer, Position } from "@deck.gl/core";
+import type { Layer } from "@deck.gl/core";
 
 import { LST } from "@/lib/config";
 import { openCog } from "@/lib/cog-cache";
-import { sampleRamp } from "@/lib/colormaps";
 import {
   celsiusToDn,
   fetchLstItems,
@@ -32,38 +30,27 @@ function rangeMoved(a: CelsiusRange, b: CelsiusRange): boolean {
   );
 }
 
-/** A bbox as the closed ring `SolidPolygonLayer` wants. */
-function cellRing([minX, minY, maxX, maxY]: LstItem["bbox"]): Position[] {
-  return [
-    [minX, minY],
-    [maxX, minY],
-    [maxX, maxY],
-    [minX, maxY],
-  ];
-}
-
 /**
  * Render the Landsat LST collection.
  *
- * Two tiers, because the collection publishes no overview. Above
- * {@link LST.MOSAIC_MIN_ZOOM} a `MosaicLayer` holds every item in a Flatbush
- * index and opens a COG per item the viewport covers, which is 63 of them at
- * the crossover and 17 over a country. Below it the same items draw as
- * 5-degree cells coloured by their own mean, which costs no request at all:
- * items.parquet already carried the statistic. The world view would otherwise
- * open all 769 COGs and read 18 MB of header before painting a pixel.
+ * One tier, at every zoom. A `MosaicLayer` holds all 769 items in a Flatbush
+ * index and opens a COG per item the viewport covers. `COGLayer` then reads
+ * the overview level that matches the screen, so a wide view costs each item
+ * its header plus one 281 by 281 tile rather than any full-resolution pixels.
  *
- * A cell fades by how much of its footprint carries data, so a tile holding a
- * sliver of coast reads as a sliver rather than a solid 5-degree block.
+ * The opening view is framed on the data rather than on the globe, which is
+ * what keeps this affordable: 60N to 60S fills the map at zoom 2, and that
+ * covers 621 items instead of the whole collection.
  *
- * Both tiers share one colour range, mean +/- 2 sigma. The mosaic narrows it
- * to the tiles on screen as they settle. The cell layer keeps the
- * collection-wide range, which is the honest one when the whole world is in
- * view.
+ * The colour range is mean +/- 2 sigma, pooled from the per-item statistics
+ * that items.parquet already carries. It starts collection-wide and narrows
+ * to the tiles on screen as they settle.
  */
 export function useLstLayer(visible: boolean = true) {
   const zoom = useMapStore((s) => s.zoom);
-  const useMosaic = zoom >= LST.MOSAIC_MIN_ZOOM;
+  // A boolean, not the zoom itself. Depending on the zoom would rebuild every
+  // source layer on every wheel tick.
+  const dropSlivers = zoom < LST.SLIVER_MAX_ZOOM;
 
   const [items, setItems] = useState<LstItem[]>([]);
   const [collectionRange, setCollectionRange] = useState<CelsiusRange | null>(
@@ -75,7 +62,7 @@ export function useLstLayer(visible: boolean = true) {
 
   const setLstRange = useMapStore((s) => s.setLstRange);
 
-  const range = useMosaic ? (viewportRange ?? collectionRange) : collectionRange;
+  const range = viewportRange ?? collectionRange;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,13 +89,6 @@ export function useLstLayer(visible: boolean = true) {
     return () => controller.abort();
   }, []);
 
-  // Drop the narrowed range on the way down to the cells. Holding a range
-  // fitted to one city would recolour the whole world against it, and would
-  // still be in force for the first frames of the next zoom in.
-  useEffect(() => {
-    if (!useMosaic) setViewportRange(null);
-  }, [useMosaic]);
-
   // Publish the active range so the legend can label its ramp.
   useEffect(() => {
     setLstRange(range);
@@ -132,30 +112,16 @@ export function useLstLayer(visible: boolean = true) {
     // tile in view.
     if (!visible || items.length === 0 || !range) return null;
 
+    // A tile holding a sliver of coast draws less than one screen pixel at a
+    // wide zoom, so the header and tile it costs buy nothing. items.parquet
+    // already carries the coverage, so this decision needs no request.
+    const drawn = dropSlivers
+      ? items.filter((item) => item.validFraction >= LST.MIN_COVERAGE)
+      : items;
+
     const minDn = celsiusToDn(range.minC);
     const maxDn = celsiusToDn(range.maxC);
     const rescaleKey = `${range.minC}:${range.maxC}`;
-
-    // Below the crossover, one cell per item stands in for 769 COGs.
-    if (!useMosaic) {
-      // A collapsed range would divide by zero and paint every cell the same
-      // colour, so give it a span of one digital number to fall back on.
-      const span = maxDn - minDn || 1;
-
-      return new SolidPolygonLayer<LstItem>({
-        id: "lst-cells",
-        data: items,
-        getPolygon: (item) => cellRing(item.bbox),
-        getFillColor: (item) => {
-          const [r, g, b] = sampleRamp("heat", (item.mean - minDn) / span);
-          return [r, g, b, Math.round(item.validFraction * 255)];
-        },
-        // The ramp follows the range, and deck.gl keeps the colours it has
-        // already uploaded until something tells it they are stale.
-        updateTriggers: { getFillColor: [rescaleKey] },
-        pickable: false,
-      });
-    }
 
     const renderTile = makeRenderTile({
       minDn,
@@ -165,7 +131,7 @@ export function useLstLayer(visible: boolean = true) {
 
     return new MosaicLayer<LstItem>({
       id: "lst-mosaic",
-      sources: items,
+      sources: drawn,
       onViewportLoad,
       renderSource: (source, { signal }) =>
         new COGLayer<RasterTileData>({
@@ -179,7 +145,7 @@ export function useLstLayer(visible: boolean = true) {
           updateTriggers: { renderTile: [rescaleKey] },
         }),
     });
-  }, [items, range, visible, useMosaic, onViewportLoad]);
+  }, [items, range, visible, dropSlivers, onViewportLoad]);
 
   return { layer, isLoading, error };
 }

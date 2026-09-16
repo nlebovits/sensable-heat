@@ -15,7 +15,7 @@ import { GeoTIFF } from "@developmentseed/geotiff";
  * mosaic opens 63 at its widest affordable zoom. The cap stops a long panning
  * session over either mosaic from pinning every header it has ever touched.
  */
-const MAX_OPEN = 256;
+const MAX_OPEN = 1024;
 
 /** Insertion-ordered, so the first key is the least recently used. */
 const opened = new Map<string, Promise<GeoTIFF>>();

@@ -4,14 +4,15 @@ export const MAP_CONFIG = {
   TRANSITION_DURATION: 700,
   MIN_ZOOM: 0,
   MAX_ZOOM: 20,
-  // Framed on the whole collection, which now reaches every continent
-  // between 60 degrees north and 60 degrees south. The side panel takes the
-  // left of the window and the map takes the rest, so this zoom is set to fit
-  // 360 degrees into what is left rather than into the whole window.
+  // Framed on the data rather than on the globe. The collection stops at 60
+  // degrees north and south, and at this zoom that band fills the map from
+  // top to bottom with no empty sky or empty ocean. It costs half the
+  // longitude, which is what keeps the opening view to 621 items instead of
+  // the whole collection.
   INITIAL_VIEW: {
-    latitude: 10,
-    longitude: 0,
-    zoom: 1,
+    latitude: 0,
+    longitude: -20,
+    zoom: 2,
     bearing: 0,
     pitch: 0,
   },
@@ -23,7 +24,7 @@ export const MAP_CONFIG = {
 // See https://github.com/nlebovits/landsat-lst-smoke
 export const LST = {
   COLLECTION_URL:
-    "https://s3.us-west-2.amazonaws.com/us-west-2.opendata.source.coop/nlebovits/landsat-lst/lst-p95-2021-2025",
+    "https://data.source.coop/nlebovits/landsat-lst/lst-p95-2021-2025",
 
   /** stac-geoparquet mirror of the collection's items. */
   get ITEMS_PARQUET_URL() {
@@ -47,27 +48,24 @@ export const LST = {
    * Every item is 18000 by 18000 over six overviews, so its IFD chain and all
    * of its tile offset arrays end by byte 16264, and this covers them in one
    * request. `GeoTIFF.fromUrl` defaults to 64 KB, which reads four times what
-   * it uses. A view at {@link LST.MOSAIC_MIN_ZOOM} opens 63 items at once, so
-   * that default would cost 4 MB of header where this costs 1.5 MB.
+   * it uses. The opening view opens 621 items at once, so that default would
+   * cost 40 MB of header where this costs 10 MB.
    */
-  HEADER_CHUNK_BYTES: 24 * 1024,
+  HEADER_CHUNK_BYTES: 16 * 1024,
 
   /**
-   * Zoom at which the per-item COGs take over from the cell layer.
+   * Zoom below which a near-empty item is dropped from the mosaic.
    *
-   * Every source in view opens its own COG, so the mosaic costs one request
-   * and 24 KB of header per item on screen. That is 63 items and 1.5 MB here,
-   * against 769 items and 18 MB at the opening view. S3 speaks HTTP/1.1, so
-   * the browser drains those over six sockets, and the whole collection at
-   * once takes upwards of fifteen seconds before a pixel lands.
-   *
-   * Below this zoom {@link CELL_SIDE_DEG} cells stand in, coloured from the
-   * per-item statistics that items.parquet already carries.
+   * A 5-degree tile over a coastline holds a sliver of land and a great deal
+   * of ocean. Wide of this zoom that sliver covers less than a screen pixel,
+   * so the header and tile it costs buy nothing visible. 148 of the 769 items
+   * fall under {@link MIN_COVERAGE}, and dropping them at the opening view
+   * removes 296 requests without changing what the map draws.
    */
-  MOSAIC_MIN_ZOOM: 4,
+  SLIVER_MAX_ZOOM: 6,
 
-  /** Side of one item's footprint, in degrees. The cell layer draws these. */
-  CELL_SIDE_DEG: 5,
+  /** Least share of a tile that must carry data for it to be worth drawing. */
+  MIN_COVERAGE: 0.05,
 
   /** Half-width of the display range, in standard deviations. */
   SIGMA: 2,

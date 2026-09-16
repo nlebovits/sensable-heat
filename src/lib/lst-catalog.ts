@@ -27,8 +27,9 @@ export interface LstItem {
    * Share of the item's raster that carries data, from 0 to 1.
    *
    * A 5-degree cell over a coastline holds a sliver of land and a great deal
-   * of ocean. The cell layer fades a cell by this, so the coarse view shows
-   * where the collection measured something rather than painting whole seas.
+   * of ocean. Wide of {@link LST.SLIVER_MAX_ZOOM} that sliver covers less
+   * than a screen pixel, so the mosaic drops items below
+   * {@link LST.MIN_COVERAGE} rather than spend a request on them.
    */
   validFraction: number;
 }

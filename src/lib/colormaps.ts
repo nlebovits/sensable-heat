@@ -53,24 +53,6 @@ export const RAMPS = {
 
 export type RampName = keyof typeof RAMPS;
 
-/**
- * Read one colour off a ramp on the CPU, for layers that colour a geometry
- * rather than a pixel.
- *
- * `t` is the position along the ramp, from 0 to 1, and is clamped at both
- * ends. This samples the same lookup table the fragment shader samples, so a
- * cell coloured here and a tile coloured on the GPU agree at the same value.
- */
-export function sampleRamp(
-  ramp: RampName,
-  t: number
-): [number, number, number] {
-  const lut = RAMPS[ramp];
-  const clamped = t < 0 ? 0 : t > 1 ? 1 : t;
-  const offset = Math.round(clamped * (LUT_SIZE - 1)) * 4;
-  return [lut[offset], lut[offset + 1], lut[offset + 2]];
-}
-
 // One texture per ramp per GPU device. A WeakMap lets a lost device and its
 // textures be collected together, which matters because deck.gl rebuilds the
 // device on a context loss.
